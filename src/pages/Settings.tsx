@@ -13,9 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
 const commodityOptions = [
-  { value: 'Grains', label: 'Grains', icon: Wheat },
-  { value: 'Meat', label: 'Meat', icon: Drumstick },
-  { value: 'Oil', label: 'Oil', icon: Droplets },
+  { value: 'Grains', label: 'Grãos', icon: Wheat },
+  { value: 'Meat', label: 'Carnes', icon: Drumstick },
+  { value: 'Oil', label: 'Óleo', icon: Droplets },
 ];
 
 const currencyOptions = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
@@ -49,8 +49,8 @@ export default function Settings() {
   const handleAddSetting = async () => {
     if (!newSetting.asset_name || !newSetting.target_currency) {
       toast({
-        title: 'Missing fields',
-        description: 'Please select a commodity and currency pair',
+        title: 'Campos obrigatórios',
+        description: 'Por favor, selecione uma commodity e um par de moedas',
         variant: 'destructive',
       });
       return;
@@ -69,22 +69,22 @@ export default function Settings() {
       if (error) {
         if (error.code === '23505') {
           toast({
-            title: 'Already exists',
-            description: 'This commodity/currency combination already exists',
+            title: 'Já existe',
+            description: 'Esta combinação de commodity/moeda já existe',
             variant: 'destructive',
           });
         } else {
           throw error;
         }
       } else {
-        toast({ title: 'Setting saved successfully' });
+        toast({ title: 'Configuração salva com sucesso' });
         setNewSetting({ asset_name: '', target_currency: '', target_price: '', alert_threshold: '5' });
         queryClient.invalidateQueries({ queryKey: ['commodity-settings'] });
       }
     } catch (error) {
       toast({
-        title: 'Error saving setting',
-        description: 'Please try again',
+        title: 'Erro ao salvar configuração',
+        description: 'Por favor, tente novamente',
         variant: 'destructive',
       });
     } finally {
@@ -96,15 +96,20 @@ export default function Settings() {
     try {
       const { error } = await supabase.from('commodity_settings').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Setting deleted' });
+      toast({ title: 'Configuração excluída' });
       queryClient.invalidateQueries({ queryKey: ['commodity-settings'] });
     } catch (error) {
       toast({
-        title: 'Error deleting setting',
-        description: 'Please try again',
+        title: 'Erro ao excluir configuração',
+        description: 'Por favor, tente novamente',
         variant: 'destructive',
       });
     }
+  };
+
+  const getCommodityLabel = (value: string) => {
+    const commodity = commodityOptions.find(c => c.value === value);
+    return commodity?.label || value;
   };
 
   return (
@@ -120,12 +125,12 @@ export default function Settings() {
             className="text-muted-foreground hover:text-foreground gap-2 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Voltar ao Painel
           </Button>
           
-          <h2 className="text-2xl font-bold text-foreground mb-1">Settings</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-1">Configurações</h2>
           <p className="text-sm text-muted-foreground">
-            Configure your target prices and alert thresholds
+            Configure seus preços-alvo e limites de alerta
           </p>
         </div>
 
@@ -137,7 +142,7 @@ export default function Settings() {
           <div className="space-y-6">
             {/* Add New Setting */}
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Add Alert Setting</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Adicionar Configuração de Alerta</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
@@ -147,7 +152,7 @@ export default function Settings() {
                     onValueChange={(value) => setNewSetting(prev => ({ ...prev, asset_name: value }))}
                   >
                     <SelectTrigger className="bg-secondary border-border">
-                      <SelectValue placeholder="Select commodity" />
+                      <SelectValue placeholder="Selecione a commodity" />
                     </SelectTrigger>
                     <SelectContent>
                       {commodityOptions.map((opt) => (
@@ -160,13 +165,13 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Currency Pair</Label>
+                  <Label>Par de Moedas</Label>
                   <Select
                     value={newSetting.target_currency}
                     onValueChange={(value) => setNewSetting(prev => ({ ...prev, target_currency: value }))}
                   >
                     <SelectTrigger className="bg-secondary border-border">
-                      <SelectValue placeholder="Select pair" />
+                      <SelectValue placeholder="Selecione o par" />
                     </SelectTrigger>
                     <SelectContent>
                       {currencyOptions.map((opt) => (
@@ -177,11 +182,11 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Target Price (optional)</Label>
+                  <Label>Preço-Alvo (opcional)</Label>
                   <Input
                     type="number"
                     step="0.0001"
-                    placeholder="e.g., 5.0000"
+                    placeholder="ex: 5.0000"
                     value={newSetting.target_price}
                     onChange={(e) => setNewSetting(prev => ({ ...prev, target_price: e.target.value }))}
                     className="bg-secondary border-border"
@@ -189,7 +194,7 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Alert Threshold (%)</Label>
+                  <Label>Limite de Alerta (%)</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -207,17 +212,17 @@ export default function Settings() {
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground gap-2"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Add Setting
+                Adicionar Configuração
               </Button>
             </div>
 
             {/* Existing Settings */}
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Your Alert Settings</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Suas Configurações de Alerta</h3>
               
               {settings.length === 0 ? (
                 <p className="text-muted-foreground text-sm py-8 text-center">
-                  No settings configured yet. Add one above to get started.
+                  Nenhuma configuração ainda. Adicione uma acima para começar.
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -236,11 +241,11 @@ export default function Settings() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">
-                              {setting.asset_name} • {setting.target_currency}
+                              {getCommodityLabel(setting.asset_name)} • {setting.target_currency}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Target: {setting.target_price ? setting.target_price.toFixed(4) : '—'} | 
-                              Threshold: ±{setting.alert_threshold}%
+                              Alvo: {setting.target_price ? setting.target_price.toFixed(4) : '—'} | 
+                              Limite: ±{setting.alert_threshold}%
                             </p>
                           </div>
                         </div>

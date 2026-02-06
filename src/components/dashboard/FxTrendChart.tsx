@@ -1,6 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { FxRate } from '@/types/database';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface FxTrendChartProps {
   rates: FxRate[];
@@ -22,7 +23,7 @@ export function FxTrendChart({ rates, currencyCode }: FxTrendChartProps) {
     time: format(new Date(rate.timestamp), 'HH:mm'),
     bid: Number(rate.bid_value),
     ask: Number(rate.ask_value),
-    fullTime: format(new Date(rate.timestamp), 'MMM dd, HH:mm'),
+    fullTime: format(new Date(rate.timestamp), "dd 'de' MMM, HH:mm", { locale: ptBR }),
   }));
 
   const currentRate = filteredRates[filteredRates.length - 1];
@@ -32,26 +33,26 @@ export function FxTrendChart({ rates, currencyCode }: FxTrendChartProps) {
     <div className="chart-container h-[300px]">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">{currencyCode} Trend</h3>
+          <h3 className="text-lg font-semibold text-foreground">Tendência {currencyCode}</h3>
           <p className="text-xs text-muted-foreground">
-            Current vs Moving Average
+            Atual vs Média Móvel
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-primary rounded-full" />
-            <span className="text-xs text-muted-foreground">Bid</span>
+            <span className="text-xs text-muted-foreground">Compra</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-muted-foreground/50 rounded-full" />
-            <span className="text-xs text-muted-foreground">Avg</span>
+            <span className="text-xs text-muted-foreground">Média</span>
           </div>
         </div>
       </div>
 
       {isBelowAverage && (
         <div className="mb-3 px-3 py-2 rounded-lg bg-success/10 border border-success/20 text-xs text-success">
-          ✨ Current rate is below average — potential buying opportunity
+          ✨ Taxa atual abaixo da média — potencial oportunidade de compra
         </div>
       )}
 
@@ -92,7 +93,7 @@ export function FxTrendChart({ rates, currencyCode }: FxTrendChartProps) {
             }}
             labelStyle={{ color: 'hsl(210 40% 98%)' }}
             itemStyle={{ color: 'hsl(187 94% 43%)' }}
-            formatter={(value: number) => [value.toFixed(4), 'Rate']}
+            formatter={(value: number) => [value.toFixed(4), 'Taxa']}
             labelFormatter={(label, payload) => payload[0]?.payload?.fullTime || label}
           />
           <ReferenceLine 

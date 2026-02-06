@@ -26,7 +26,7 @@ export function DashboardHeader() {
                 Sourcing Shield
               </h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                FX Intelligence
+                Inteligência FX
               </p>
             </div>
           </div>
@@ -34,7 +34,7 @@ export function DashboardHeader() {
           {/* Live indicator */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20">
             <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-xs font-medium text-success">Live</span>
+            <span className="text-xs font-medium text-success">Ao Vivo</span>
           </div>
 
           {/* Actions */}
@@ -63,7 +63,7 @@ export function DashboardHeader() {
               className="text-muted-foreground hover:text-foreground gap-2"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>

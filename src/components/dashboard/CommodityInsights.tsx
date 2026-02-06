@@ -8,9 +8,9 @@ interface CommodityInsightsProps {
 }
 
 const commodities = [
-  { name: 'Grains', icon: Wheat, preferredCurrency: 'USD/BRL' },
-  { name: 'Meat', icon: Drumstick, preferredCurrency: 'EUR/BRL' },
-  { name: 'Oil', icon: Droplets, preferredCurrency: 'CNY/BRL' },
+  { name: 'Grains', label: 'Grãos', icon: Wheat, preferredCurrency: 'USD/BRL' },
+  { name: 'Meat', label: 'Carnes', icon: Drumstick, preferredCurrency: 'EUR/BRL' },
+  { name: 'Oil', label: 'Óleo', icon: Droplets, preferredCurrency: 'CNY/BRL' },
 ];
 
 export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
@@ -29,25 +29,25 @@ export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
     const rate = getLatestRate(preferredCurrency);
     
     if (relevantInsight?.type === 'Opportunity') {
-      return { action: 'BUY', color: 'success', message: 'Favorable conditions' };
+      return { action: 'COMPRAR', color: 'success', message: 'Condições favoráveis' };
     } else if (relevantInsight?.type === 'Risk') {
-      return { action: 'WAIT', color: 'warning', message: 'Monitor trends' };
+      return { action: 'AGUARDAR', color: 'warning', message: 'Monitorar tendências' };
     }
     
     // Default based on rate trend
     if (rate && Number(rate.pct_change) < 0) {
-      return { action: 'BUY', color: 'success', message: 'Rate declining' };
+      return { action: 'COMPRAR', color: 'success', message: 'Taxa em queda' };
     }
-    return { action: 'HOLD', color: 'muted', message: 'Stable conditions' };
+    return { action: 'MANTER', color: 'muted', message: 'Condições estáveis' };
   };
 
   return (
     <div className="glass-card rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">B2B Procurement Signals</h3>
+          <h3 className="text-lg font-semibold text-foreground">Sinais de Compra B2B</h3>
           <p className="text-xs text-muted-foreground mt-1">
-            Import/Export recommendations based on FX trends
+            Recomendações de importação/exportação baseadas em tendências de câmbio
           </p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground">{commodity.name}</h4>
+                  <h4 className="font-medium text-foreground">{commodity.label}</h4>
                   <p className="text-xs text-muted-foreground">
                     {commodity.preferredCurrency} @ {rate ? Number(rate.bid_value).toFixed(4) : '—'}
                   </p>
@@ -96,9 +96,9 @@ export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
 
       <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
         <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="text-primary font-medium">Pro tip:</span> These signals are based on 
-          current FX trends vs. 30-day moving averages. Configure your target prices in Settings 
-          for personalized alerts.
+          <span className="text-primary font-medium">Dica:</span> Estes sinais são baseados em 
+          tendências de câmbio atuais vs. médias móveis de 30 dias. Configure seus preços-alvo em Configurações 
+          para alertas personalizados.
         </p>
       </div>
     </div>

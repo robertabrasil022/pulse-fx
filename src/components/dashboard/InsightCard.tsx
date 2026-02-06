@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown, AlertTriangle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils';
 import { FxInsight } from '@/types/database';
 import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface InsightCardProps {
   insight: FxInsight;
@@ -13,6 +14,16 @@ export function InsightCard({ insight }: InsightCardProps) {
   
   const TypeIcon = isOpportunity ? Sparkles : AlertTriangle;
   const TrendIcon = isBullish ? TrendingUp : TrendingDown;
+
+  const getTypeLabel = (type: string) => {
+    return type === 'Opportunity' ? 'Oportunidade' : 'Risco';
+  };
+
+  const getIndicatorLabel = (indicator: string) => {
+    if (indicator === 'Bullish') return 'Alta';
+    if (indicator === 'Bearish') return 'Baixa';
+    return 'Neutro';
+  };
 
   return (
     <div className={cn(
@@ -38,11 +49,11 @@ export function InsightCard({ insight }: InsightCardProps) {
               "text-xs font-semibold uppercase tracking-wider",
               isOpportunity ? "text-success" : "text-destructive"
             )}>
-              {insight.type}
+              {getTypeLabel(insight.type)}
             </span>
             <span className="text-muted-foreground text-xs">•</span>
             <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(insight.created_at), { addSuffix: true })}
+              {formatDistanceToNow(new Date(insight.created_at), { addSuffix: true, locale: ptBR })}
             </span>
           </div>
 
@@ -66,7 +77,7 @@ export function InsightCard({ insight }: InsightCardProps) {
               isBullish ? "text-success" : "text-destructive"
             )}>
               <TrendIcon className="h-3.5 w-3.5" />
-              <span className="font-medium">{insight.indicator}</span>
+              <span className="font-medium">{getIndicatorLabel(insight.indicator)}</span>
             </div>
           </div>
         </div>

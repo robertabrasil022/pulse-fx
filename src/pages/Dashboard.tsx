@@ -51,9 +51,9 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-1">FX Intelligence Dashboard</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-1">Painel de Inteligência FX</h2>
           <p className="text-sm text-muted-foreground">
-            Real-time currency monitoring for commodity procurement
+            Monitoramento de câmbio em tempo real para compras de commodities
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading dashboard data...</p>
+              <p className="text-muted-foreground">Carregando dados do painel...</p>
             </div>
           </div>
         ) : (
@@ -69,7 +69,7 @@ export default function Dashboard() {
             <TabsList className="glass-card p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
                 <BarChart3 className="h-4 w-4" />
-                Overview
+                Visão Geral
               </TabsTrigger>
               <TabsTrigger value="insights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
                 <Lightbulb className="h-4 w-4" />
@@ -77,7 +77,7 @@ export default function Dashboard() {
               </TabsTrigger>
               <TabsTrigger value="trends" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Trends
+                Tendências
               </TabsTrigger>
             </TabsList>
 
@@ -85,7 +85,7 @@ export default function Dashboard() {
             <TabsContent value="overview" className="space-y-6 animate-fade-in">
               {/* FX Rate Cards */}
               <section>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Exchange Rates</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Taxas de Câmbio</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {latestRates.map((rate) => rate && (
                     <FxRateCard key={rate.id} rate={rate} />
@@ -107,16 +107,16 @@ export default function Dashboard() {
             {/* Insights Tab */}
             <TabsContent value="insights" className="space-y-4 animate-fade-in">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Market Insights</h3>
+                <h3 className="text-lg font-semibold text-foreground">Insights de Mercado</h3>
                 <span className="text-xs text-muted-foreground">
-                  {insights.length} active signals
+                  {insights.length} sinais ativos
                 </span>
               </div>
               
               {insights.length === 0 ? (
                 <div className="glass-card rounded-xl p-12 text-center">
                   <Lightbulb className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-muted-foreground">No insights available yet</p>
+                  <p className="text-muted-foreground">Nenhum insight disponível ainda</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -139,7 +139,7 @@ export default function Dashboard() {
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                     <p className="text-sm text-muted-foreground">
-                      Additional charts coming soon
+                      Gráficos adicionais em breve
                     </p>
                   </div>
                 </div>

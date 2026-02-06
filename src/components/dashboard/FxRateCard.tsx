@@ -36,7 +36,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
             <span className="text-2xl">{getCurrencyFlag(rate.code)}</span>
             <div>
               <h3 className="text-lg font-semibold text-foreground">{rate.code}</h3>
-              <p className="text-xs text-muted-foreground">Real-time</p>
+              <p className="text-xs text-muted-foreground">Tempo real</p>
             </div>
           </div>
           <div className={cn(
@@ -57,7 +57,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
         {/* Bid/Ask Values */}
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Bid</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Compra</p>
             <p className="stat-value text-foreground">
               {rate.bid_value.toFixed(4)}
             </p>
@@ -65,7 +65,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Ask</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Venda</p>
               <p className="text-xl font-semibold text-muted-foreground">
                 {rate.ask_value.toFixed(4)}
               </p>
