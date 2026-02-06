@@ -9,8 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 const authSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Por favor, insira um e-mail válido'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
 export default function Auth() {
@@ -35,7 +35,7 @@ export default function Auth() {
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast({
-        title: 'Validation Error',
+        title: 'Erro de Validação',
         description: validation.error.errors[0].message,
         variant: 'destructive',
       });
@@ -48,9 +48,9 @@ export default function Auth() {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
-            title: 'Sign In Failed',
+            title: 'Falha ao Entrar',
             description: error.message === 'Invalid login credentials' 
-              ? 'Invalid email or password. Please try again.'
+              ? 'E-mail ou senha inválidos. Por favor, tente novamente.'
               : error.message,
             variant: 'destructive',
           });
@@ -62,21 +62,21 @@ export default function Auth() {
         if (error) {
           if (error.message.includes('already registered')) {
             toast({
-              title: 'Account Exists',
-              description: 'An account with this email already exists. Please sign in instead.',
+              title: 'Conta Existente',
+              description: 'Já existe uma conta com este e-mail. Por favor, faça login.',
               variant: 'destructive',
             });
           } else {
             toast({
-              title: 'Sign Up Failed',
+              title: 'Falha ao Cadastrar',
               description: error.message,
               variant: 'destructive',
             });
           }
         } else {
           toast({
-            title: 'Check Your Email',
-            description: 'We sent you a confirmation link. Please check your inbox.',
+            title: 'Verifique seu E-mail',
+            description: 'Enviamos um link de confirmação. Por favor, verifique sua caixa de entrada.',
           });
         }
       }
@@ -105,18 +105,18 @@ export default function Auth() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">Sourcing Shield</h1>
-              <p className="text-xs text-muted-foreground">FX Intelligence Platform</p>
+              <p className="text-xs text-muted-foreground">Plataforma de Inteligência FX</p>
             </div>
           </div>
 
           <div className="max-w-md">
             <h2 className="text-4xl font-bold text-foreground leading-tight mb-6">
-              Smart currency insights for{' '}
-              <span className="text-gradient-primary">commodity procurement</span>
+              Insights de câmbio inteligentes para{' '}
+              <span className="text-gradient-primary">compras de commodities</span>
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Monitor real-time FX rates, analyze market trends, and receive actionable 
-              Buy/Wait recommendations for your import/export operations.
+              Monitore taxas de câmbio em tempo real, analise tendências de mercado e receba 
+              recomendações de Compra/Espera para suas operações de importação/exportação.
             </p>
 
             <div className="mt-8 grid grid-cols-3 gap-4">
@@ -125,7 +125,7 @@ export default function Auth() {
                   key={pair}
                   className="glass-card rounded-lg p-3 text-center"
                 >
-                  <p className="text-xs text-muted-foreground mb-1">Track</p>
+                  <p className="text-xs text-muted-foreground mb-1">Monitorar</p>
                   <p className="text-sm font-semibold text-foreground">{pair}</p>
                 </div>
               ))}
@@ -133,7 +133,7 @@ export default function Auth() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            © 2026 Sourcing Shield. All rights reserved.
+            © 2026 Sourcing Shield. Todos os direitos reservados.
           </p>
         </div>
       </div>
@@ -152,24 +152,24 @@ export default function Auth() {
           <div className="glass-card rounded-2xl p-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                {isLogin ? 'Welcome back' : 'Create account'}
+                {isLogin ? 'Bem-vindo de volta' : 'Criar conta'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {isLogin 
-                  ? 'Sign in to access your dashboard' 
-                  : 'Start monitoring FX rates today'}
+                  ? 'Entre para acessar seu painel' 
+                  : 'Comece a monitorar taxas de câmbio hoje'}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm text-foreground">Email</Label>
+                <Label htmlFor="email" className="text-sm text-foreground">E-mail</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@company.com"
+                    placeholder="voce@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 bg-secondary border-border focus:border-primary"
@@ -179,7 +179,7 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm text-foreground">Password</Label>
+                <Label htmlFor="password" className="text-sm text-foreground">Senha</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -203,7 +203,7 @@ export default function Auth() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    {isLogin ? 'Sign In' : 'Create Account'}
+                    {isLogin ? 'Entrar' : 'Criar Conta'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
@@ -217,9 +217,9 @@ export default function Auth() {
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {isLogin ? (
-                  <>Don't have an account? <span className="text-primary font-medium">Sign up</span></>
+                  <>Não tem uma conta? <span className="text-primary font-medium">Cadastre-se</span></>
                 ) : (
-                  <>Already have an account? <span className="text-primary font-medium">Sign in</span></>
+                  <>Já tem uma conta? <span className="text-primary font-medium">Entrar</span></>
                 )}
               </button>
             </div>

@@ -37,12 +37,12 @@ export default function Logs() {
             className="text-muted-foreground hover:text-foreground gap-2 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Voltar ao Painel
           </Button>
           
-          <h2 className="text-2xl font-bold text-foreground mb-1">Integration Logs</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-1">Logs de Integração</h2>
           <p className="text-sm text-muted-foreground">
-            Monitor n8n workflow executions and data sync status
+            Monitore as execuções de workflows n8n e status de sincronização de dados
           </p>
         </div>
 

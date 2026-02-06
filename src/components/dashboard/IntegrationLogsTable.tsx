@@ -2,6 +2,7 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IntegrationLog } from '@/types/database';
 import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Table,
   TableBody,
@@ -45,9 +46,9 @@ export function IntegrationLogsTable({ logs }: IntegrationLogsTableProps) {
   return (
     <div className="glass-card rounded-xl overflow-hidden">
       <div className="p-5 border-b border-border/50">
-        <h3 className="text-lg font-semibold text-foreground">Integration Logs</h3>
+        <h3 className="text-lg font-semibold text-foreground">Logs de Integração</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          Monitor n8n workflow executions
+          Monitore as execuções de workflows n8n
         </p>
       </div>
       
@@ -55,17 +56,17 @@ export function IntegrationLogsTable({ logs }: IntegrationLogsTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="border-border/50 hover:bg-transparent">
-              <TableHead className="text-muted-foreground text-xs font-medium">Workflow ID</TableHead>
+              <TableHead className="text-muted-foreground text-xs font-medium">ID do Workflow</TableHead>
               <TableHead className="text-muted-foreground text-xs font-medium">Status</TableHead>
-              <TableHead className="text-muted-foreground text-xs font-medium">Message</TableHead>
-              <TableHead className="text-muted-foreground text-xs font-medium">Time</TableHead>
+              <TableHead className="text-muted-foreground text-xs font-medium">Mensagem</TableHead>
+              <TableHead className="text-muted-foreground text-xs font-medium">Data/Hora</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {logs.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  No integration logs found
+                  Nenhum log de integração encontrado
                 </TableCell>
               </TableRow>
             ) : (
@@ -81,7 +82,7 @@ export function IntegrationLogsTable({ logs }: IntegrationLogsTableProps) {
                     {log.message || '-'}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}
                   </TableCell>
                 </TableRow>
               ))
