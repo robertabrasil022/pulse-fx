@@ -11,6 +11,7 @@ import { ComparativeTrendChart } from '@/components/dashboard/ComparativeTrendCh
 import { InsightCard } from '@/components/dashboard/InsightCard';
 import { CommodityInsights } from '@/components/dashboard/CommodityInsights';
 import { OperationsCalculator } from '@/components/dashboard/OperationsCalculator';
+import { AIMarketInsights } from '@/components/dashboard/AIMarketInsights';
 import { PersonalizedAlerts } from '@/components/dashboard/PersonalizedAlerts';
 import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
@@ -173,8 +174,10 @@ export default function Dashboard() {
               </section>
             </TabsContent>
 
-            {/* Insights Tab */}
             <TabsContent value="insights" className="space-y-6 animate-fade-in">
+              {/* AI Market Analysis */}
+              <AIMarketInsights rates={rates} />
+              
               {/* Personalized Alerts Section */}
               <PersonalizedAlerts rates={rates} commoditySettings={commoditySettings} />
               
