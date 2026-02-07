@@ -8,9 +8,12 @@ import { CommoditySetting } from '@/types/database';
 import { cn } from '@/lib/utils';
 
 const commodityOptions = [
-  { value: 'Grains', label: 'Grãos', icon: Wheat },
-  { value: 'Meat', label: 'Carnes', icon: Drumstick },
-  { value: 'Oil', label: 'Óleo', icon: Droplets },
+  { value: 'Grãos', label: 'Grãos', icon: Wheat },
+  { value: 'Carnes', label: 'Carnes', icon: Drumstick },
+  { value: 'Óleo', label: 'Óleo', icon: Droplets },
+  { value: 'Açúcar', label: 'Açúcar', icon: Wheat },
+  { value: 'Café', label: 'Café', icon: Wheat },
+  { value: 'Soja', label: 'Soja', icon: Wheat },
 ];
 
 const currencyOptions = [

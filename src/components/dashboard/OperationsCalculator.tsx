@@ -18,12 +18,12 @@ interface OperationsCalculatorProps {
 }
 
 const COMMODITIES = [
-  { id: 'grains', name: 'Grãos', unit: 'tonelada' },
-  { id: 'meat', name: 'Carnes', unit: 'tonelada' },
-  { id: 'oil', name: 'Óleo', unit: 'barril' },
-  { id: 'sugar', name: 'Açúcar', unit: 'tonelada' },
-  { id: 'coffee', name: 'Café', unit: 'saca (60kg)' },
-  { id: 'soy', name: 'Soja', unit: 'tonelada' },
+  { id: 'graos', name: 'Grãos', unit: 'tonelada' },
+  { id: 'carnes', name: 'Carnes', unit: 'tonelada' },
+  { id: 'oleo', name: 'Óleo', unit: 'barril' },
+  { id: 'acucar', name: 'Açúcar', unit: 'tonelada' },
+  { id: 'cafe', name: 'Café', unit: 'saca (60kg)' },
+  { id: 'soja', name: 'Soja', unit: 'tonelada' },
 ];
 
 // Currency metadata for symbols and display names
