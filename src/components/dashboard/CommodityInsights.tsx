@@ -1,4 +1,4 @@
-import { Wheat, Drumstick, Droplets, ArrowRight } from 'lucide-react';
+import { Wheat, Drumstick, Droplets, ArrowRight, Candy, Coffee, Bean } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FxRate, FxInsight } from '@/types/database';
 
@@ -11,6 +11,9 @@ const commodities = [
   { name: 'Grains', label: 'Grãos', icon: Wheat, preferredCurrency: 'USD/BRL' },
   { name: 'Meat', label: 'Carnes', icon: Drumstick, preferredCurrency: 'EUR/BRL' },
   { name: 'Oil', label: 'Óleo', icon: Droplets, preferredCurrency: 'CNY/BRL' },
+  { name: 'Sugar', label: 'Açúcar', icon: Candy, preferredCurrency: 'USD/BRL' },
+  { name: 'Coffee', label: 'Café', icon: Coffee, preferredCurrency: 'USD/BRL' },
+  { name: 'Soy', label: 'Soja', icon: Bean, preferredCurrency: 'USD/BRL' },
 ];
 
 export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
