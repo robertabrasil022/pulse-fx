@@ -2,14 +2,14 @@ import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useFxRates, useFxInsights, useIntegrationLogs } from '@/hooks/useDashboardData';
+import { useFxRates, useFxInsights } from '@/hooks/useDashboardData';
 import { useQueryClient } from '@tanstack/react-query';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { ExpandableFxRateCard } from '@/components/dashboard/ExpandableFxRateCard';
 import { FxTrendChart } from '@/components/dashboard/FxTrendChart';
 import { InsightCard } from '@/components/dashboard/InsightCard';
 import { CommodityInsights } from '@/components/dashboard/CommodityInsights';
-import { IntegrationLogsTable } from '@/components/dashboard/IntegrationLogsTable';
+import { OperationsCalculator } from '@/components/dashboard/OperationsCalculator';
 import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
 import { EmptyState } from '@/components/dashboard/EmptyState';
@@ -24,7 +24,6 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const { data: rates = [], isLoading: ratesLoading, isFetching: ratesFetching, dataUpdatedAt } = useFxRates();
   const { data: insights = [], isLoading: insightsLoading, isFetching: insightsFetching } = useFxInsights();
-  const { data: logs = [], isLoading: logsLoading } = useIntegrationLogs();
   const queryClient = useQueryClient();
   
   // Currency filter state - start with default 3 currencies
@@ -34,7 +33,6 @@ export default function Dashboard() {
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['fx-rates'] });
     queryClient.invalidateQueries({ queryKey: ['fx-insights'] });
-    queryClient.invalidateQueries({ queryKey: ['integration-logs'] });
   }, [queryClient]);
 
   const isRefreshing = ratesFetching || insightsFetching;
@@ -65,7 +63,7 @@ export default function Dashboard() {
     [selectedCurrencies, getLatestRate, getHistoricalRates]
   );
 
-  const isLoading = ratesLoading || insightsLoading || logsLoading;
+  const isLoading = ratesLoading || insightsLoading;
   const hasNoRates = !ratesLoading && latestRates.length === 0;
   const hasNoInsights = !insightsLoading && insights.length === 0;
 
@@ -171,13 +169,9 @@ export default function Dashboard() {
                 <CommodityInsights rates={rates} insights={insights} />
               </section>
 
-              {/* Recent Logs Preview */}
+              {/* Operations Calculator */}
               <section>
-                {logs.length > 0 ? (
-                  <IntegrationLogsTable logs={logs.slice(0, 5)} />
-                ) : (
-                  <EmptyState type="logs" />
-                )}
+                <OperationsCalculator rates={rates} />
               </section>
             </TabsContent>
 
