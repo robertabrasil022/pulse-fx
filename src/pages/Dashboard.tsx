@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Loader2, RefreshCw, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useFxRates, useFxInsights } from '@/hooks/useDashboardData';
+import { useFxRates, useFxInsights, useCommoditySettings } from '@/hooks/useDashboardData';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -10,6 +10,7 @@ import { ConversionPanel } from '@/components/dashboard/ConversionPanel';
 import { CurrencyCard } from '@/components/dashboard/CurrencyCard';
 import { InsightsSection } from '@/components/dashboard/ActionableInsights';
 import { PeriodComparisonChart } from '@/components/dashboard/PeriodComparisonChart';
+import { CommoditySummary } from '@/components/dashboard/CommoditySummary';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const { data: rates = [], isLoading: ratesLoading, isFetching, dataUpdatedAt } = useFxRates();
   const { data: insights = [] } = useFxInsights();
+  const { data: commoditySettings = [] } = useCommoditySettings(user?.id);
   const { preferences, isLoading: prefsLoading } = usePreferences();
   const queryClient = useQueryClient();
 
@@ -29,6 +31,7 @@ export default function Dashboard() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['fx-rates'] });
     queryClient.invalidateQueries({ queryKey: ['fx-insights'] });
+    queryClient.invalidateQueries({ queryKey: ['commodity-settings'] });
   };
 
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : undefined;
@@ -108,6 +111,9 @@ export default function Dashboard() {
                 <Skeleton key={i} className="h-40 rounded-xl" />
               ))}
             </div>
+
+            {/* Commodity Summary Skeleton */}
+            <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         ) : (
           <div className="space-y-6">
@@ -147,6 +153,11 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+            </section>
+
+            {/* Commodity Summary - Shows user's monitored commodities */}
+            <section>
+              <CommoditySummary settings={commoditySettings} rates={rates} />
             </section>
 
             {/* Insights Section */}
