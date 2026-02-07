@@ -9,14 +9,13 @@ import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { PulseFXLogo } from '@/components/PulseFXLogo';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ThemeProvider } from '@/hooks/useTheme';
 
 const authSchema = z.object({
   email: z.string().email('Por favor, insira um e-mail válido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
-function AuthContent() {
+export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -226,13 +225,5 @@ function AuthContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function Auth() {
-  return (
-    <ThemeProvider>
-      <AuthContent />
-    </ThemeProvider>
   );
 }

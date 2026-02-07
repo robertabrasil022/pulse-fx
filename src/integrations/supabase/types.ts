@@ -134,6 +134,48 @@ export type Database = {
         }
         Relationships: []
       }
+      preferences: {
+        Row: {
+          created_at: string
+          id: string
+          notifications_email: boolean
+          notifications_push: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          theme: string
+          updated_at: string
+          user_id: string
+          watchlist: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notifications_email?: boolean
+          notifications_push?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          theme?: string
+          updated_at?: string
+          user_id: string
+          watchlist?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notifications_email?: boolean
+          notifications_push?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          theme?: string
+          updated_at?: string
+          user_id?: string
+          watchlist?: string[]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null

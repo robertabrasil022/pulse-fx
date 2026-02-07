@@ -1,13 +1,12 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Settings, Loader2, Moon, Sun, Monitor, Bell, Clock, Check } from 'lucide-react';
+import { Loader2, Bell, Clock, Check, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/hooks/useTheme';
+import { usePreferences } from '@/hooks/usePreferences';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -16,43 +15,62 @@ const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', '
 
 export default function Preferences() {
   const { user, loading: authLoading } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { preferences, isLoading: prefsLoading, updatePreferencesAsync, isUpdating } = usePreferences();
   const { toast } = useToast();
 
-  // Local state for preferences (would be saved to Supabase in production)
-  const [watchlist, setWatchlist] = useState<string[]>(['USD/BRL', 'EUR/BRL', 'CNY/BRL']);
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    quietHours: false,
-    quietStart: '22:00',
-    quietEnd: '08:00',
-  });
-
-  const handleWatchlistToggle = (currency: string) => {
-    setWatchlist(prev => 
-      prev.includes(currency) 
-        ? prev.filter(c => c !== currency)
-        : [...prev, currency]
-    );
+  const handleWatchlistToggle = async (currency: string) => {
+    if (!preferences) return;
+    
+    const newWatchlist = preferences.watchlist.includes(currency)
+      ? preferences.watchlist.filter(c => c !== currency)
+      : [...preferences.watchlist, currency];
+    
+    try {
+      await updatePreferencesAsync({ watchlist: newWatchlist });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a watchlist',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleSave = () => {
-    toast({
-      title: 'Preferências salvas',
-      description: 'Suas configurações foram atualizadas com sucesso',
-    });
+  const handleNotificationChange = async (field: 'notifications_email' | 'notifications_push' | 'quiet_hours_enabled', value: boolean) => {
+    try {
+      await updatePreferencesAsync({ [field]: value });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar as configurações',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleQuietHoursChange = async (field: 'quiet_hours_start' | 'quiet_hours_end', value: string) => {
+    try {
+      await updatePreferencesAsync({ [field]: value });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o horário',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (!authLoading && !user) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (authLoading) {
+  if (authLoading || prefsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AppLayout>
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
     );
   }
 
@@ -60,72 +78,30 @@ export default function Preferences() {
     <AppLayout>
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
         {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Preferências</h1>
-          <p className="text-sm text-muted-foreground">
-            Personalize sua experiência no PulseFX
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Preferências</h1>
+            <p className="text-sm text-muted-foreground">
+              Personalize sua experiência no PulseFX
+            </p>
+          </div>
+          {isUpdating && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Salvando...
+            </div>
+          )}
         </div>
-
-        {/* Theme Settings */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Aparência
-            </CardTitle>
-            <CardDescription>
-              Escolha o tema de exibição do aplicativo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              value={theme}
-              onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
-              className="grid grid-cols-3 gap-4"
-            >
-              <Label
-                htmlFor="light"
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  theme === 'light' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <RadioGroupItem value="light" id="light" className="sr-only" />
-                <Sun className="h-6 w-6" />
-                <span className="text-sm font-medium">Claro</span>
-              </Label>
-
-              <Label
-                htmlFor="dark"
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <RadioGroupItem value="dark" id="dark" className="sr-only" />
-                <Moon className="h-6 w-6" />
-                <span className="text-sm font-medium">Escuro</span>
-              </Label>
-
-              <Label
-                htmlFor="system"
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  theme === 'system' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                }`}
-              >
-                <RadioGroupItem value="system" id="system" className="sr-only" />
-                <Monitor className="h-6 w-6" />
-                <span className="text-sm font-medium">Sistema</span>
-              </Label>
-            </RadioGroup>
-          </CardContent>
-        </Card>
 
         {/* Watchlist */}
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Watchlist de Moedas</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Watchlist de Moedas
+            </CardTitle>
             <CardDescription>
-              Selecione as moedas que deseja monitorar
+              Selecione as moedas que deseja monitorar no dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -134,13 +110,13 @@ export default function Preferences() {
                 <label
                   key={currency}
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    watchlist.includes(currency)
+                    preferences?.watchlist.includes(currency)
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
                   <Checkbox
-                    checked={watchlist.includes(currency)}
+                    checked={preferences?.watchlist.includes(currency) || false}
                     onCheckedChange={() => handleWatchlistToggle(currency)}
                   />
                   <span className="text-sm font-medium">{currency}</span>
@@ -168,10 +144,8 @@ export default function Preferences() {
                 <p className="text-sm text-muted-foreground">Receber alertas por email</p>
               </div>
               <Switch
-                checked={notifications.email}
-                onCheckedChange={(checked) => 
-                  setNotifications(prev => ({ ...prev, email: checked }))
-                }
+                checked={preferences?.notifications_email || false}
+                onCheckedChange={(checked) => handleNotificationChange('notifications_email', checked)}
               />
             </div>
 
@@ -181,10 +155,8 @@ export default function Preferences() {
                 <p className="text-sm text-muted-foreground">Receber alertas no navegador</p>
               </div>
               <Switch
-                checked={notifications.push}
-                onCheckedChange={(checked) => 
-                  setNotifications(prev => ({ ...prev, push: checked }))
-                }
+                checked={preferences?.notifications_push || false}
+                onCheckedChange={(checked) => handleNotificationChange('notifications_push', checked)}
               />
             </div>
 
@@ -200,23 +172,19 @@ export default function Preferences() {
                   </p>
                 </div>
                 <Switch
-                  checked={notifications.quietHours}
-                  onCheckedChange={(checked) => 
-                    setNotifications(prev => ({ ...prev, quietHours: checked }))
-                  }
+                  checked={preferences?.quiet_hours_enabled || false}
+                  onCheckedChange={(checked) => handleNotificationChange('quiet_hours_enabled', checked)}
                 />
               </div>
 
-              {notifications.quietHours && (
+              {preferences?.quiet_hours_enabled && (
                 <div className="grid grid-cols-2 gap-4 animate-fade-in">
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Início</Label>
                     <input
                       type="time"
-                      value={notifications.quietStart}
-                      onChange={(e) => 
-                        setNotifications(prev => ({ ...prev, quietStart: e.target.value }))
-                      }
+                      value={preferences?.quiet_hours_start?.slice(0, 5) || '22:00'}
+                      onChange={(e) => handleQuietHoursChange('quiet_hours_start', e.target.value + ':00')}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                     />
                   </div>
@@ -224,10 +192,8 @@ export default function Preferences() {
                     <Label className="text-sm text-muted-foreground">Fim</Label>
                     <input
                       type="time"
-                      value={notifications.quietEnd}
-                      onChange={(e) => 
-                        setNotifications(prev => ({ ...prev, quietEnd: e.target.value }))
-                      }
+                      value={preferences?.quiet_hours_end?.slice(0, 5) || '08:00'}
+                      onChange={(e) => handleQuietHoursChange('quiet_hours_end', e.target.value + ':00')}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                     />
                   </div>
@@ -237,14 +203,10 @@ export default function Preferences() {
           </CardContent>
         </Card>
 
-        {/* Save Button */}
-        <Button 
-          onClick={handleSave} 
-          className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90"
-        >
-          <Check className="h-4 w-4 mr-2" />
-          Salvar Preferências
-        </Button>
+        {/* Info about theme */}
+        <p className="text-sm text-muted-foreground text-center">
+          💡 Para alterar o tema (claro/escuro), use o botão na barra de navegação superior.
+        </p>
       </div>
     </AppLayout>
   );
