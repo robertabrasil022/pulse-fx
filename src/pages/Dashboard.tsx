@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Loader2, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
+const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 
 export default function Dashboard() {
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns

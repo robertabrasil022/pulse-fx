@@ -27,6 +27,12 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
     if (code.startsWith('USD')) return '🇺🇸';
     if (code.startsWith('EUR')) return '🇪🇺';
     if (code.startsWith('CNY')) return '🇨🇳';
+    if (code.startsWith('GBP')) return '🇬🇧';
+    if (code.startsWith('JPY')) return '🇯🇵';
+    if (code.startsWith('ARS')) return '🇦🇷';
+    if (code.startsWith('AUD')) return '🇦🇺';
+    if (code.startsWith('RUB')) return '🇷🇺';
+    if (code.startsWith('INR')) return '🇮🇳';
     return '💱';
   };
 
