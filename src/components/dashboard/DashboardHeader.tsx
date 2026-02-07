@@ -1,10 +1,10 @@
-import { Activity, Settings, LogOut, Shield } from 'lucide-react';
+import { Settings, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export function DashboardHeader() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -44,16 +44,9 @@ export function DashboardHeader() {
               size="icon"
               onClick={() => navigate('/settings')}
               className="text-muted-foreground hover:text-foreground"
+              title="Configurações"
             >
               <Settings className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/logs')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Activity className="h-5 w-5" />
             </Button>
             <div className="w-px h-6 bg-border mx-2" />
             <Button
