@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useFxRates, useFxInsights, useIntegrationLogs } from '@/hooks/useDashboardData';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ import { Loader2, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
+const DEFAULT_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
 
 export default function Dashboard() {
   // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
@@ -25,8 +27,8 @@ export default function Dashboard() {
   const { data: logs = [], isLoading: logsLoading } = useIntegrationLogs();
   const queryClient = useQueryClient();
   
-  // Currency filter state
-  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(ALL_CURRENCIES);
+  // Currency filter state - start with default 3 currencies
+  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(DEFAULT_CURRENCIES);
 
   // Refresh handler
   const handleRefresh = useCallback(() => {
@@ -145,7 +147,14 @@ export default function Dashboard() {
                     isRefreshing={isRefreshing}
                   />
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    latestRates.length === 1 && "grid-cols-1",
+                    latestRates.length === 2 && "grid-cols-1 md:grid-cols-2",
+                    latestRates.length >= 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                    latestRates.length > 3 && latestRates.length <= 6 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                    latestRates.length > 6 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  )}>
                     {latestRates.map(({ rate, history }) => (
                       <ExpandableFxRateCard 
                         key={rate.id} 
