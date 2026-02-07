@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ConversionPanel } from '@/components/dashboard/ConversionPanel';
 import { CurrencyCard } from '@/components/dashboard/CurrencyCard';
-import { InsightsSection } from '@/components/dashboard/ActionableInsights';
+import { AIMarketInsights } from '@/components/dashboard/AIMarketInsights';
 import { PeriodComparisonChart } from '@/components/dashboard/PeriodComparisonChart';
 import { CommoditySummary } from '@/components/dashboard/CommoditySummary';
 import { Button } from '@/components/ui/button';
@@ -160,15 +160,9 @@ export default function Dashboard() {
               <CommoditySummary settings={commoditySettings} rates={rates} />
             </section>
 
-            {/* Insights Section */}
+            {/* AI Insights Section */}
             <section>
-              <InsightsSection 
-                rates={latestRates.map(r => ({
-                  code: r!.code,
-                  bid_value: r!.bid_value,
-                  pct_change: r!.pct_change || 0,
-                }))}
-              />
+              <AIMarketInsights rates={rates} />
             </section>
 
             {/* Period Comparison Chart */}
