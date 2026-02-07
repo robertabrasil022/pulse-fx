@@ -25,6 +25,12 @@ const currencyOptions = [
   { value: 'USD/BRL', label: 'USD/BRL', flag: '🇺🇸' },
   { value: 'EUR/BRL', label: 'EUR/BRL', flag: '🇪🇺' },
   { value: 'CNY/BRL', label: 'CNY/BRL', flag: '🇨🇳' },
+  { value: 'GBP/BRL', label: 'GBP/BRL', flag: '🇬🇧' },
+  { value: 'JPY/BRL', label: 'JPY/BRL', flag: '🇯🇵' },
+  { value: 'ARS/BRL', label: 'ARS/BRL', flag: '🇦🇷' },
+  { value: 'AUD/BRL', label: 'AUD/BRL', flag: '🇦🇺' },
+  { value: 'RUB/BRL', label: 'RUB/BRL', flag: '🇷🇺' },
+  { value: 'INR/BRL', label: 'INR/BRL', flag: '🇮🇳' },
 ];
 
 const thresholdPresets = [

@@ -12,6 +12,12 @@ const currencyInfo: Record<string, { flag: string; label: string }> = {
   'USD/BRL': { flag: '🇺🇸', label: 'Dólar' },
   'EUR/BRL': { flag: '🇪🇺', label: 'Euro' },
   'CNY/BRL': { flag: '🇨🇳', label: 'Yuan' },
+  'GBP/BRL': { flag: '🇬🇧', label: 'Libra' },
+  'JPY/BRL': { flag: '🇯🇵', label: 'Iene' },
+  'ARS/BRL': { flag: '🇦🇷', label: 'Peso AR' },
+  'AUD/BRL': { flag: '🇦🇺', label: 'Dólar AU' },
+  'RUB/BRL': { flag: '🇷🇺', label: 'Rublo' },
+  'INR/BRL': { flag: '🇮🇳', label: 'Rupia' },
 };
 
 export function CurrencyFilter({ currencies, selected, onSelectionChange }: CurrencyFilterProps) {
