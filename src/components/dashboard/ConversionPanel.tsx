@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowRightLeft, TrendingUp, TrendingDown, Activity, Minus } from 'lucide-react';
+import { ArrowRightLeft, TrendingUp, TrendingDown, Activity, Minus, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ interface ConversionPanelProps {
 export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
   const [amount, setAmount] = useState<string>('1000');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('USD/BRL');
+  const [isReversed, setIsReversed] = useState(false); // false = foreign→BRL, true = BRL→foreign
 
   // Get latest rate for selected currency
   const latestRate = useMemo(() => {
@@ -57,11 +58,28 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
     return { change24h, change7d, change30d, volatility7d };
   }, [rates, selectedCurrency]);
 
-  const convertedAmount = useMemo(() => {
+  // Conversion calculation - bidirectional
+  const { convertedAmount, rate, rateType } = useMemo(() => {
     const numAmount = parseFloat(amount) || 0;
-    if (!latestRate) return 0;
-    return numAmount * latestRate.bid_value;
-  }, [amount, latestRate]);
+    if (!latestRate) return { convertedAmount: 0, rate: 0, rateType: '' };
+    
+    if (isReversed) {
+      // BRL → Foreign: use ask rate (selling BRL, buying foreign)
+      const converted = latestRate.ask_value > 0 ? numAmount / latestRate.ask_value : 0;
+      return { 
+        convertedAmount: converted, 
+        rate: latestRate.ask_value,
+        rateType: 'venda'
+      };
+    } else {
+      // Foreign → BRL: use bid rate (selling foreign, buying BRL)
+      return { 
+        convertedAmount: numAmount * latestRate.bid_value, 
+        rate: latestRate.bid_value,
+        rateType: 'compra'
+      };
+    }
+  }, [amount, latestRate, isReversed]);
 
   const formatChange = (value: number) => {
     const formatted = Math.abs(value).toFixed(2);
@@ -83,6 +101,34 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
   };
 
   const currencyBase = selectedCurrency.split('/')[0];
+  const fromCurrency = isReversed ? 'BRL' : currencyBase;
+  const toCurrency = isReversed ? currencyBase : 'BRL';
+
+  const formatResult = (value: number) => {
+    if (isReversed) {
+      // Foreign currency - show more decimals for small values
+      return value < 1 
+        ? value.toFixed(4) 
+        : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    }
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const getCurrencySymbol = (currency: string) => {
+    const symbols: Record<string, string> = {
+      'BRL': 'R$',
+      'USD': '$',
+      'EUR': '€',
+      'CNY': '¥',
+      'GBP': '£',
+      'JPY': '¥',
+      'ARS': '$',
+      'AUD': 'A$',
+      'RUB': '₽',
+      'INR': '₹',
+    };
+    return symbols[currency] || currency;
+  };
 
   return (
     <Card className="glass-card border-primary/20 overflow-hidden">
@@ -95,9 +141,13 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
       </CardHeader>
       <CardContent className="relative space-y-6">
         {/* Conversion Form */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr,auto] gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,auto,1fr] gap-4 items-end">
+          {/* Input Amount */}
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">Valor</label>
+            <label className="text-sm text-muted-foreground flex items-center gap-2">
+              <span className="text-lg">{getCurrencySymbol(fromCurrency)}</span>
+              Valor em {fromCurrency}
+            </label>
             <Input
               type="number"
               value={amount}
@@ -107,10 +157,11 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
             />
           </div>
           
+          {/* Currency Selector */}
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">Moeda</label>
+            <label className="text-sm text-muted-foreground">Par</label>
             <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -123,19 +174,51 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
             </Select>
           </div>
 
+          {/* Swap Button */}
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">Resultado em BRL</label>
-            <div className="h-10 px-3 flex items-center bg-muted/50 rounded-md">
-              <span className="text-lg font-semibold tabular-nums">
-                R$ {convertedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <label className="text-sm text-muted-foreground invisible">Inverter</label>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsReversed(!isReversed)}
+              className="border-primary/30 hover:border-primary hover:bg-primary/10"
+              title="Inverter conversão"
+            >
+              <RefreshCw className={cn(
+                "h-4 w-4 transition-transform duration-300",
+                isReversed && "rotate-180"
+              )} />
+            </Button>
+          </div>
+
+          {/* Result */}
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground flex items-center gap-2">
+              <span className="text-lg">{getCurrencySymbol(toCurrency)}</span>
+              Resultado em {toCurrency}
+            </label>
+            <div className="h-10 px-3 flex items-center bg-primary/10 border border-primary/20 rounded-md">
+              <span className="text-lg font-semibold tabular-nums text-foreground">
+                {getCurrencySymbol(toCurrency)} {formatResult(convertedAmount)}
               </span>
             </div>
           </div>
-
-          <Button className="bg-gradient-gold text-primary-foreground hover:opacity-90">
-            Converter
-          </Button>
         </div>
+
+        {/* Rate Info */}
+        {latestRate && (
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+            <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
+              Taxa de {rateType}: <span className="font-medium text-foreground">R$ {rate.toFixed(4)}</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
+              Compra: <span className="font-medium text-foreground">R$ {latestRate.bid_value.toFixed(4)}</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
+              Venda: <span className="font-medium text-foreground">R$ {latestRate.ask_value.toFixed(4)}</span>
+            </div>
+          </div>
+        )}
 
         {/* KPIs Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -182,12 +265,6 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
             </span>
           </div>
         </div>
-
-        {latestRate && (
-          <div className="text-xs text-muted-foreground text-center">
-            Taxa atual: 1 {currencyBase} = R$ {latestRate.bid_value.toFixed(4)}
-          </div>
-        )}
       </CardContent>
     </Card>
   );
