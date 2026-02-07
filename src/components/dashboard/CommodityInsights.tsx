@@ -8,12 +8,12 @@ interface CommodityInsightsProps {
 }
 
 const commodities = [
-  { name: 'Grains', label: 'Grãos', icon: Wheat, preferredCurrency: 'USD/BRL' },
-  { name: 'Meat', label: 'Carnes', icon: Drumstick, preferredCurrency: 'EUR/BRL' },
-  { name: 'Oil', label: 'Óleo', icon: Droplets, preferredCurrency: 'CNY/BRL' },
-  { name: 'Sugar', label: 'Açúcar', icon: Candy, preferredCurrency: 'USD/BRL' },
-  { name: 'Coffee', label: 'Café', icon: Coffee, preferredCurrency: 'USD/BRL' },
-  { name: 'Soy', label: 'Soja', icon: Bean, preferredCurrency: 'USD/BRL' },
+  { name: 'Grãos', label: 'Grãos', icon: Wheat, preferredCurrency: 'USD/BRL' },
+  { name: 'Carnes', label: 'Carnes', icon: Drumstick, preferredCurrency: 'EUR/BRL' },
+  { name: 'Óleo', label: 'Óleo', icon: Droplets, preferredCurrency: 'CNY/BRL' },
+  { name: 'Açúcar', label: 'Açúcar', icon: Candy, preferredCurrency: 'USD/BRL' },
+  { name: 'Café', label: 'Café', icon: Coffee, preferredCurrency: 'USD/BRL' },
+  { name: 'Soja', label: 'Soja', icon: Bean, preferredCurrency: 'USD/BRL' },
 ];
 
 export function CommodityInsights({ rates, insights }: CommodityInsightsProps) {
