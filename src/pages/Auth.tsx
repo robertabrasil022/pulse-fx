@@ -4,16 +4,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { PulseFXLogo } from '@/components/PulseFXLogo';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeProvider } from '@/hooks/useTheme';
 
 const authSchema = z.object({
   email: z.string().email('Por favor, insira um e-mail válido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
-export default function Auth() {
+function AuthContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -87,36 +90,35 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background">
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
+        <div className="absolute inset-0 bg-gradient-gold-subtle opacity-30" />
+        
         <div className="relative z-10 flex flex-col justify-between p-12">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-gradient-primary">
-              <Shield className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Sourcing Shield</h1>
-              <p className="text-xs text-muted-foreground">Plataforma de Inteligência FX</p>
-            </div>
-          </div>
+          <PulseFXLogo size="lg" />
 
           <div className="max-w-md">
             <h2 className="text-4xl font-bold text-foreground leading-tight mb-6">
-              Insights de câmbio inteligentes para{' '}
-              <span className="text-gradient-primary">compras de commodities</span>
+              Monitoramento de câmbio em tempo real com{' '}
+              <span className="text-gradient-gold">insights acionáveis</span>
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Monitore taxas de câmbio em tempo real, analise tendências de mercado e receba 
-              recomendações de Compra/Espera para suas operações de importação/exportação.
+              Acompanhe taxas de câmbio em tempo real, identifique janelas de oportunidade 
+              e receba alertas personalizados para otimizar suas operações de câmbio.
             </p>
 
             <div className="mt-8 grid grid-cols-3 gap-4">
@@ -133,7 +135,7 @@ export default function Auth() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            © 2026 Sourcing Shield. Todos os direitos reservados.
+            © 2026 PulseFX. Inteligência Cambial.
           </p>
         </div>
       </div>
@@ -142,11 +144,8 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="p-3 rounded-xl bg-gradient-primary">
-              <Shield className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Sourcing Shield</h1>
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <PulseFXLogo size="lg" />
           </div>
 
           <div className="glass-card rounded-2xl p-8">
@@ -196,7 +195,7 @@ export default function Auth() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-medium"
+                className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -227,5 +226,13 @@ export default function Auth() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Auth() {
+  return (
+    <ThemeProvider>
+      <AuthContent />
+    </ThemeProvider>
   );
 }

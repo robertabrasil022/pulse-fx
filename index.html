@@ -3,20 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inteligência FX - Sourcing Shield</title>
-    <meta name="description" content="Insights inteligentes de câmbio para compras de commodities">
-    <meta name="author" content="Lovable" />
+    <title>PulseFX - Inteligência Cambial</title>
+    <meta name="description" content="Dashboard de inteligência cambial com monitoramento em tempo real e insights acionáveis para fechamento de câmbio">
+    <meta name="author" content="PulseFX" />
     
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
+    <meta property="og:title" content="PulseFX - Inteligência Cambial">
+    <meta property="og:description" content="Monitoramento de câmbio em tempo real com insights acionáveis para fechamento de câmbio">
+    
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <meta property="og:title" content="Inteligência FX - Sourcing Shield">
-    <meta name="twitter:title" content="Inteligência FX - Sourcing Shield">
-    <meta property="og:description" content="Insights inteligentes de câmbio para compras de commodities">
-    <meta name="twitter:description" content="Insights inteligentes de câmbio para compras de commodities">
+    <meta name="twitter:title" content="PulseFX - Inteligência Cambial">
+    <meta name="twitter:description" content="Monitoramento de câmbio em tempo real com insights acionáveis para fechamento de câmbio">
+    
+    <script>
+      // Prevent flash of wrong theme
+      (function() {
+        const stored = localStorage.getItem('pulsefx-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = stored || (prefersDark ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
 
   <body>

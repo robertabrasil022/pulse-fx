@@ -42,6 +42,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -68,6 +72,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // PulseFX specific colors
+        gold: {
+          DEFAULT: "hsl(43 89% 61%)",
+          hover: "hsl(40 85% 55%)",
+          subtle: "hsl(43 89% 61% / 0.1)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -91,9 +101,9 @@ export default {
           "0%": { opacity: "0", transform: "translateX(20px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
-        "pulse-subtle": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.7" },
+        "pulse-gold": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(43 89% 61% / 0.4)" },
+          "50%": { boxShadow: "0 0 0 8px hsl(43 89% 61% / 0)" },
         },
         "shimmer": {
           "0%": { backgroundPosition: "-200% 0" },
@@ -105,12 +115,8 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
-        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "pulse-gold": "pulse-gold 2s ease-in-out infinite",
         "shimmer": "shimmer 2s linear infinite",
-      },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
     },
   },
