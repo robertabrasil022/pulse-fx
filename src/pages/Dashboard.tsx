@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { ExpandableFxRateCard } from '@/components/dashboard/ExpandableFxRateCard';
 import { FxTrendChart } from '@/components/dashboard/FxTrendChart';
+import { ComparativeTrendChart } from '@/components/dashboard/ComparativeTrendChart';
 import { InsightCard } from '@/components/dashboard/InsightCard';
 import { CommodityInsights } from '@/components/dashboard/CommodityInsights';
 import { OperationsCalculator } from '@/components/dashboard/OperationsCalculator';
@@ -166,11 +167,6 @@ export default function Dashboard() {
                 )}
               </section>
 
-              {/* Commodity Insights */}
-              <section>
-                <CommodityInsights rates={rates} insights={insights} />
-              </section>
-
               {/* Operations Calculator */}
               <section>
                 <OperationsCalculator rates={rates} availableCurrencies={ALL_CURRENCIES} />
@@ -181,6 +177,9 @@ export default function Dashboard() {
             <TabsContent value="insights" className="space-y-6 animate-fade-in">
               {/* Personalized Alerts Section */}
               <PersonalizedAlerts rates={rates} commoditySettings={commoditySettings} />
+              
+              {/* B2B Buy Signals */}
+              <CommodityInsights rates={rates} insights={insights} />
               
               {/* Market Insights Section */}
               <div>
@@ -209,38 +208,18 @@ export default function Dashboard() {
 
             {/* Trends Tab */}
             <TabsContent value="trends" className="space-y-6 animate-fade-in">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {selectedCurrencies.slice(0, 2).map(code => (
-                  <FxTrendChart key={code} rates={rates} currencyCode={code} />
-                ))}
-              </div>
-              {selectedCurrencies.length > 2 && (
+              {/* Comparative Chart */}
+              <ComparativeTrendChart rates={rates} currencies={selectedCurrencies} />
+              
+              {/* Individual Charts */}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Detalhamento por Moeda</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {selectedCurrencies.slice(2).map(code => (
+                  {selectedCurrencies.map(code => (
                     <FxTrendChart key={code} rates={rates} currencyCode={code} />
                   ))}
-                  {selectedCurrencies.length === 3 && (
-                    <div className="glass-card rounded-xl p-6 flex items-center justify-center">
-                      <div className="text-center">
-                        <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <p className="text-sm text-muted-foreground">
-                          Gráficos adicionais em breve
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              )}
-              {selectedCurrencies.length <= 2 && (
-                <div className="glass-card rounded-xl p-6 flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                    <p className="text-sm text-muted-foreground">
-                      Selecione mais moedas para ver gráficos adicionais
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </TabsContent>
           </Tabs>
         )}
