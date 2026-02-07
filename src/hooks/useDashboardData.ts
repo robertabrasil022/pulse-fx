@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FxRate, FxInsight, IntegrationLog, CommoditySetting } from '@/types/database';
+import { FxRate, FxInsight, CommoditySetting } from '@/types/database';
 
 export function useFxRates() {
   return useQuery({
@@ -35,21 +35,6 @@ export function useFxInsights() {
   });
 }
 
-export function useIntegrationLogs() {
-  return useQuery({
-    queryKey: ['integration-logs'],
-    queryFn: async (): Promise<IntegrationLog[]> => {
-      const { data, error } = await supabase
-        .from('integration_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      return data as IntegrationLog[];
-    },
-  });
-}
 
 export function useCommoditySettings(userId?: string) {
   return useQuery({
