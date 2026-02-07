@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowLeft, Plus, Wheat, Drumstick, Droplets, Bell, AlertCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, Wheat, Drumstick, Droplets, Bell, AlertCircle, Candy, Coffee, Bean } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,6 +19,9 @@ const commodityOptions = [
   { value: 'Grains', label: 'Grãos', icon: Wheat },
   { value: 'Meat', label: 'Carnes', icon: Drumstick },
   { value: 'Oil', label: 'Óleo', icon: Droplets },
+  { value: 'Sugar', label: 'Açúcar', icon: Candy },
+  { value: 'Coffee', label: 'Café', icon: Coffee },
+  { value: 'Soy', label: 'Soja', icon: Bean },
 ];
 
 const currencyOptions = [
