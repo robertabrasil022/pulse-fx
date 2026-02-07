@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface OperationsCalculatorProps {
   rates: FxRate[];
+  availableCurrencies: string[];
 }
 
 const COMMODITIES = [
@@ -25,18 +26,33 @@ const COMMODITIES = [
   { id: 'soy', name: 'Soja', unit: 'tonelada' },
 ];
 
-const CURRENCIES = [
-  { code: 'USD/BRL', symbol: '$', name: 'Dólar (USD)' },
-  { code: 'EUR/BRL', symbol: '€', name: 'Euro (EUR)' },
-  { code: 'CNY/BRL', symbol: '¥', name: 'Yuan (CNY)' },
-  { code: 'GBP/BRL', symbol: '£', name: 'Libra (GBP)' },
-];
+// Currency metadata for symbols and display names
+const CURRENCY_META: Record<string, { symbol: string; name: string }> = {
+  'USD/BRL': { symbol: '$', name: 'Dólar (USD)' },
+  'EUR/BRL': { symbol: '€', name: 'Euro (EUR)' },
+  'CNY/BRL': { symbol: '¥', name: 'Yuan (CNY)' },
+  'GBP/BRL': { symbol: '£', name: 'Libra (GBP)' },
+  'JPY/BRL': { symbol: '¥', name: 'Iene (JPY)' },
+  'ARS/BRL': { symbol: '$', name: 'Peso Argentino (ARS)' },
+  'AUD/BRL': { symbol: 'A$', name: 'Dólar Australiano (AUD)' },
+  'RUB/BRL': { symbol: '₽', name: 'Rublo (RUB)' },
+  'INR/BRL': { symbol: '₹', name: 'Rupia Indiana (INR)' },
+};
 
-export function OperationsCalculator({ rates }: OperationsCalculatorProps) {
+export function OperationsCalculator({ rates, availableCurrencies }: OperationsCalculatorProps) {
   const [commodity, setCommodity] = useState(COMMODITIES[0].id);
   const [quantity, setQuantity] = useState<string>('100');
   const [unitPrice, setUnitPrice] = useState<string>('500');
-  const [sourceCurrency, setSourceCurrency] = useState('USD/BRL');
+  const [sourceCurrency, setSourceCurrency] = useState(availableCurrencies[0] || 'USD/BRL');
+
+  // Build currencies list from available currencies
+  const currencies = useMemo(() => 
+    availableCurrencies.map(code => ({
+      code,
+      ...CURRENCY_META[code] || { symbol: code.split('/')[0], name: code }
+    })),
+    [availableCurrencies]
+  );
 
   // Get latest rate for each currency
   const getLatestRate = (code: string): FxRate | null => {
@@ -48,7 +64,7 @@ export function OperationsCalculator({ rates }: OperationsCalculatorProps) {
   };
 
   const selectedCommodity = COMMODITIES.find(c => c.id === commodity);
-  const selectedCurrency = CURRENCIES.find(c => c.code === sourceCurrency);
+  const selectedCurrency = currencies.find(c => c.code === sourceCurrency);
   const currentRate = getLatestRate(sourceCurrency);
 
   const calculations = useMemo(() => {
@@ -67,7 +83,7 @@ export function OperationsCalculator({ rates }: OperationsCalculatorProps) {
     const totalInBRL = totalInSource * currentRate.bid_value;
 
     // Compare with other currencies
-    const comparisons = CURRENCIES
+    const comparisons = currencies
       .filter(c => c.code !== sourceCurrency)
       .map(currency => {
         const rate = getLatestRate(currency.code);
@@ -94,7 +110,7 @@ export function OperationsCalculator({ rates }: OperationsCalculatorProps) {
       totalInBRL,
       comparisons,
     };
-  }, [quantity, unitPrice, sourceCurrency, currentRate, rates]);
+  }, [quantity, unitPrice, sourceCurrency, currentRate, rates, currencies]);
 
   const formatCurrency = (value: number, symbol: string = 'R$') => {
     return `${symbol} ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -170,7 +186,7 @@ export function OperationsCalculator({ rates }: OperationsCalculatorProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CURRENCIES.map(c => (
+                {currencies.map(c => (
                   <SelectItem key={c.code} value={c.code}>
                     {c.symbol} {c.name}
                   </SelectItem>

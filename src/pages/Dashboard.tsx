@@ -171,7 +171,7 @@ export default function Dashboard() {
 
               {/* Operations Calculator */}
               <section>
-                <OperationsCalculator rates={rates} />
+                <OperationsCalculator rates={rates} availableCurrencies={ALL_CURRENCIES} />
               </section>
             </TabsContent>
 
