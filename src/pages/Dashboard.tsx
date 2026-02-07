@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { useFxRates, useFxInsights } from '@/hooks/useDashboardData';
+import { useFxRates, useFxInsights, useCommoditySettings } from '@/hooks/useDashboardData';
 import { useQueryClient } from '@tanstack/react-query';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { ExpandableFxRateCard } from '@/components/dashboard/ExpandableFxRateCard';
@@ -10,6 +10,7 @@ import { FxTrendChart } from '@/components/dashboard/FxTrendChart';
 import { InsightCard } from '@/components/dashboard/InsightCard';
 import { CommodityInsights } from '@/components/dashboard/CommodityInsights';
 import { OperationsCalculator } from '@/components/dashboard/OperationsCalculator';
+import { PersonalizedAlerts } from '@/components/dashboard/PersonalizedAlerts';
 import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
 import { EmptyState } from '@/components/dashboard/EmptyState';
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const { data: rates = [], isLoading: ratesLoading, isFetching: ratesFetching, dataUpdatedAt } = useFxRates();
   const { data: insights = [], isLoading: insightsLoading, isFetching: insightsFetching } = useFxInsights();
+  const { data: commoditySettings = [] } = useCommoditySettings(user?.id);
   const queryClient = useQueryClient();
   
   // Currency filter state - start with default 3 currencies
@@ -176,27 +178,33 @@ export default function Dashboard() {
             </TabsContent>
 
             {/* Insights Tab */}
-            <TabsContent value="insights" className="space-y-4 animate-fade-in">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Insights de Mercado</h3>
-                <span className="text-xs text-muted-foreground">
-                  {insights.length} sinais ativos
-                </span>
-              </div>
+            <TabsContent value="insights" className="space-y-6 animate-fade-in">
+              {/* Personalized Alerts Section */}
+              <PersonalizedAlerts rates={rates} commoditySettings={commoditySettings} />
               
-              {hasNoInsights ? (
-                <EmptyState 
-                  type="insights"
-                  onRefresh={handleRefresh}
-                  isRefreshing={isRefreshing}
-                />
-              ) : (
-                <div className="space-y-4">
-                  {insights.map((insight) => (
-                    <InsightCard key={insight.id} insight={insight} />
-                  ))}
+              {/* Market Insights Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">Insights de Mercado</h3>
+                  <span className="text-xs text-muted-foreground">
+                    {insights.length} sinais ativos
+                  </span>
                 </div>
-              )}
+                
+                {hasNoInsights ? (
+                  <EmptyState 
+                    type="insights"
+                    onRefresh={handleRefresh}
+                    isRefreshing={isRefreshing}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {insights.map((insight) => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </TabsContent>
 
             {/* Trends Tab */}
