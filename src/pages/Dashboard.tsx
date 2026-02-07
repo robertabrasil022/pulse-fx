@@ -1,22 +1,73 @@
+import { useState, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFxRates, useFxInsights, useIntegrationLogs } from '@/hooks/useDashboardData';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { FxRateCard } from '@/components/dashboard/FxRateCard';
+import { ExpandableFxRateCard } from '@/components/dashboard/ExpandableFxRateCard';
 import { FxTrendChart } from '@/components/dashboard/FxTrendChart';
 import { InsightCard } from '@/components/dashboard/InsightCard';
 import { CommodityInsights } from '@/components/dashboard/CommodityInsights';
 import { IntegrationLogsTable } from '@/components/dashboard/IntegrationLogsTable';
+import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
+import { RefreshButton } from '@/components/dashboard/RefreshButton';
+import { EmptyState } from '@/components/dashboard/EmptyState';
 import { Loader2, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
-  const { data: rates = [], isLoading: ratesLoading } = useFxRates();
-  const { data: insights = [], isLoading: insightsLoading } = useFxInsights();
-  const { data: logs = [], isLoading: logsLoading } = useIntegrationLogs();
+const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
 
-  // Redirect to auth if not logged in
+export default function Dashboard() {
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
+  const { user, loading: authLoading } = useAuth();
+  const { data: rates = [], isLoading: ratesLoading, isFetching: ratesFetching, dataUpdatedAt } = useFxRates();
+  const { data: insights = [], isLoading: insightsLoading, isFetching: insightsFetching } = useFxInsights();
+  const { data: logs = [], isLoading: logsLoading } = useIntegrationLogs();
+  const queryClient = useQueryClient();
+  
+  // Currency filter state
+  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>(ALL_CURRENCIES);
+
+  // Refresh handler
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['fx-rates'] });
+    queryClient.invalidateQueries({ queryKey: ['fx-insights'] });
+    queryClient.invalidateQueries({ queryKey: ['integration-logs'] });
+  }, [queryClient]);
+
+  const isRefreshing = ratesFetching || insightsFetching;
+  const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : undefined;
+
+  // Get latest rates for each currency pair (filtered)
+  const getLatestRate = useCallback((code: string) => {
+    const currencyRates = rates.filter(r => r.code === code);
+    if (currencyRates.length === 0) return null;
+    return currencyRates.sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    )[0];
+  }, [rates]);
+
+  // Get historical rates for a currency
+  const getHistoricalRates = useCallback((code: string) => {
+    return rates
+      .filter(r => r.code === code)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [rates]);
+
+  const latestRates = useMemo(() => 
+    selectedCurrencies
+      .map(code => ({ rate: getLatestRate(code), history: getHistoricalRates(code) }))
+      .filter((item): item is { rate: NonNullable<typeof item.rate>; history: typeof item.history } => 
+        item.rate !== null
+      ),
+    [selectedCurrencies, getLatestRate, getHistoricalRates]
+  );
+
+  const isLoading = ratesLoading || insightsLoading || logsLoading;
+  const hasNoRates = !ratesLoading && latestRates.length === 0;
+  const hasNoInsights = !insightsLoading && insights.length === 0;
+
+  // CONDITIONAL RETURNS AFTER ALL HOOKS
   if (!authLoading && !user) {
     return <Navigate to="/auth" replace />;
   }
@@ -29,32 +80,24 @@ export default function Dashboard() {
     );
   }
 
-  // Get latest rates for each currency pair
-  const getLatestRate = (code: string) => {
-    const currencyRates = rates.filter(r => r.code === code);
-    if (currencyRates.length === 0) return null;
-    return currencyRates.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    )[0];
-  };
-
-  const latestRates = ['USD/BRL', 'EUR/BRL', 'CNY/BRL']
-    .map(code => getLatestRate(code))
-    .filter(Boolean);
-
-  const isLoading = ratesLoading || insightsLoading || logsLoading;
-
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-1">Painel de Inteligência FX</h2>
-          <p className="text-sm text-muted-foreground">
-            Monitoramento de câmbio em tempo real para compras de commodities
-          </p>
+        {/* Page Title with Refresh */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-1">Painel de Inteligência FX</h2>
+            <p className="text-sm text-muted-foreground">
+              Monitoramento de câmbio em tempo real para compras de commodities
+            </p>
+          </div>
+          <RefreshButton 
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+            lastUpdate={lastUpdate}
+          />
         </div>
 
         {isLoading ? (
@@ -66,31 +109,52 @@ export default function Dashboard() {
           </div>
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="glass-card p-1">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Visão Geral
-              </TabsTrigger>
-              <TabsTrigger value="insights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Insights
-              </TabsTrigger>
-              <TabsTrigger value="trends" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Tendências
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <TabsList className="glass-card p-1">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Visão Geral
+                </TabsTrigger>
+                <TabsTrigger value="insights" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                  <Lightbulb className="h-4 w-4" />
+                  Insights
+                </TabsTrigger>
+                <TabsTrigger value="trends" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Tendências
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Currency Filter */}
+              <CurrencyFilter
+                currencies={ALL_CURRENCIES}
+                selected={selectedCurrencies}
+                onSelectionChange={setSelectedCurrencies}
+              />
+            </div>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6 animate-fade-in">
               {/* FX Rate Cards */}
               <section>
                 <h3 className="text-lg font-semibold text-foreground mb-4">Taxas de Câmbio</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {latestRates.map((rate) => rate && (
-                    <FxRateCard key={rate.id} rate={rate} />
-                  ))}
-                </div>
+                {hasNoRates ? (
+                  <EmptyState 
+                    type="rates" 
+                    onRefresh={handleRefresh}
+                    isRefreshing={isRefreshing}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {latestRates.map(({ rate, history }) => (
+                      <ExpandableFxRateCard 
+                        key={rate.id} 
+                        rate={rate}
+                        historicalRates={history}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
 
               {/* Commodity Insights */}
@@ -100,7 +164,11 @@ export default function Dashboard() {
 
               {/* Recent Logs Preview */}
               <section>
-                <IntegrationLogsTable logs={logs.slice(0, 5)} />
+                {logs.length > 0 ? (
+                  <IntegrationLogsTable logs={logs.slice(0, 5)} />
+                ) : (
+                  <EmptyState type="logs" />
+                )}
               </section>
             </TabsContent>
 
@@ -113,11 +181,12 @@ export default function Dashboard() {
                 </span>
               </div>
               
-              {insights.length === 0 ? (
-                <div className="glass-card rounded-xl p-12 text-center">
-                  <Lightbulb className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-muted-foreground">Nenhum insight disponível ainda</p>
-                </div>
+              {hasNoInsights ? (
+                <EmptyState 
+                  type="insights"
+                  onRefresh={handleRefresh}
+                  isRefreshing={isRefreshing}
+                />
               ) : (
                 <div className="space-y-4">
                   {insights.map((insight) => (
@@ -130,20 +199,37 @@ export default function Dashboard() {
             {/* Trends Tab */}
             <TabsContent value="trends" className="space-y-6 animate-fade-in">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <FxTrendChart rates={rates} currencyCode="USD/BRL" />
-                <FxTrendChart rates={rates} currencyCode="EUR/BRL" />
+                {selectedCurrencies.slice(0, 2).map(code => (
+                  <FxTrendChart key={code} rates={rates} currencyCode={code} />
+                ))}
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <FxTrendChart rates={rates} currencyCode="CNY/BRL" />
+              {selectedCurrencies.length > 2 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {selectedCurrencies.slice(2).map(code => (
+                    <FxTrendChart key={code} rates={rates} currencyCode={code} />
+                  ))}
+                  {selectedCurrencies.length === 3 && (
+                    <div className="glass-card rounded-xl p-6 flex items-center justify-center">
+                      <div className="text-center">
+                        <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                        <p className="text-sm text-muted-foreground">
+                          Gráficos adicionais em breve
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {selectedCurrencies.length <= 2 && (
                 <div className="glass-card rounded-xl p-6 flex items-center justify-center">
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                     <p className="text-sm text-muted-foreground">
-                      Gráficos adicionais em breve
+                      Selecione mais moedas para ver gráficos adicionais
                     </p>
                   </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
           </Tabs>
         )}
