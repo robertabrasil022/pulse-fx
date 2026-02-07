@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -6,6 +8,7 @@ interface ThemeContextType {
   theme: Theme;
   resolvedTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
+  isLoading: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -13,6 +16,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const STORAGE_KEY = 'pulsefx-theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
@@ -31,6 +37,36 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return 'light';
   });
 
+  // Load theme from database if user is logged in
+  useEffect(() => {
+    const loadThemeFromDB = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('preferences')
+          .select('theme')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!error && data?.theme) {
+          setThemeState(data.theme as Theme);
+          localStorage.setItem(STORAGE_KEY, data.theme);
+        }
+      } catch (err) {
+        console.error('Failed to load theme from database:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadThemeFromDB();
+  }, [user?.id]);
+
+  // Apply theme to DOM
   useEffect(() => {
     const root = document.documentElement;
     
@@ -55,13 +91,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback(async (newTheme: Theme) => {
+    // Update local state and localStorage immediately
     localStorage.setItem(STORAGE_KEY, newTheme);
     setThemeState(newTheme);
-  };
+
+    // Persist to database if user is logged in
+    if (user?.id) {
+      try {
+        await supabase
+          .from('preferences')
+          .update({ theme: newTheme })
+          .eq('user_id', user.id);
+      } catch (err) {
+        console.error('Failed to save theme to database:', err);
+      }
+    }
+  }, [user?.id]);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );
