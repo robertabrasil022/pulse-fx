@@ -23,6 +23,6 @@ export async function getSession() {
   return supabase.auth.getSession();
 }
 
-export function onAuthStateChange(callback: Parameters<typeof supabase.auth.onAuthStateChange>[0]) {
-  return supabase.auth.onAuthStateChange(callback);
+export function onAuthStateChange(callback: (event: string, session: any) => void | Promise<void>) {
+  return supabase.auth.onAuthStateChange(callback as any);
 }
