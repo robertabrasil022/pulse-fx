@@ -49,57 +49,20 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Helper: fetch with retry on 429
-    async function fetchWithRetry(url: string, retries = 4): Promise<any> {
-      for (let i = 0; i < retries; i++) {
-        const res = await fetch(url);
-        if (res.ok) return res.json();
-        if (res.status === 429 && i < retries - 1) {
-          const wait = (i + 1) * 3000;
-          console.warn(`Rate limited, waiting ${wait / 1000}s...`);
-          await new Promise((r) => setTimeout(r, wait));
-          continue;
-        }
-        if (!res.ok) throw new Error(`API error: ${res.status} for ${url}`);
-      }
+    // Single call with all currencies + commodities together
+    const allPairs = [...CURRENCY_PAIRS, ...COMMODITY_CODES].join(",");
+    const apiUrl = `https://economia.awesomeapi.com.br/json/last/${allPairs}`;
+    
+    console.log("Fetching:", apiUrl);
+    const res = await fetch(apiUrl);
+    
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`API response ${res.status}:`, body);
+      throw new Error(`AwesomeAPI error: ${res.status}`);
     }
-
-    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-    // Fetch each pair individually with delays to respect rate limits
-    let allData: Record<string, any> = {};
-
-    // Fetch all currency pairs one by one
-    const allPairsToFetch = [
-      ...CURRENCY_PAIRS,
-      ...COMMODITY_CODES.map((c) => c), // XAU, XAG, BTC are single codes
-    ];
-
-    for (let i = 0; i < CURRENCY_PAIRS.length; i++) {
-      if (i > 0) await delay(1000);
-      try {
-        const data = await fetchWithRetry(
-          `https://economia.awesomeapi.com.br/json/last/${CURRENCY_PAIRS[i]}`
-        );
-        allData = { ...allData, ...data };
-      } catch (e) {
-        console.warn(`Failed to fetch ${CURRENCY_PAIRS[i]}:`, e);
-      }
-    }
-
-    // Commodities
-    for (let i = 0; i < COMMODITY_CODES.length; i++) {
-      await delay(1000);
-      try {
-        const data = await fetchWithRetry(
-          `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES[i]}`
-        );
-        allData = { ...allData, ...data };
-      } catch (e) {
-        console.warn(`Failed to fetch commodity ${COMMODITY_CODES[i]}:`, e);
-      }
-    }
-
+    
+    const allData = await res.json();
     // 3. Parse and prepare rows
     const rows = Object.entries(allData).map(([key, value]: [string, any]) => {
       const code = formatCode(key);
