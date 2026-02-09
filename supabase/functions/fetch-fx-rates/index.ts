@@ -66,31 +66,38 @@ serve(async (req) => {
 
     const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    // Fetch in small batches of 3 pairs to avoid 429
-    const batches: string[][] = [];
-    for (let i = 0; i < CURRENCY_PAIRS.length; i += 3) {
-      batches.push(CURRENCY_PAIRS.slice(i, i + 3));
-    }
-
+    // Fetch each pair individually with delays to respect rate limits
     let allData: Record<string, any> = {};
 
-    for (let i = 0; i < batches.length; i++) {
-      if (i > 0) await delay(2000);
-      const batchData = await fetchWithRetry(
-        `https://economia.awesomeapi.com.br/json/last/${batches[i].join(",")}`
-      );
-      allData = { ...allData, ...batchData };
+    // Fetch all currency pairs one by one
+    const allPairsToFetch = [
+      ...CURRENCY_PAIRS,
+      ...COMMODITY_CODES.map((c) => c), // XAU, XAG, BTC are single codes
+    ];
+
+    for (let i = 0; i < CURRENCY_PAIRS.length; i++) {
+      if (i > 0) await delay(1000);
+      try {
+        const data = await fetchWithRetry(
+          `https://economia.awesomeapi.com.br/json/last/${CURRENCY_PAIRS[i]}`
+        );
+        allData = { ...allData, ...data };
+      } catch (e) {
+        console.warn(`Failed to fetch ${CURRENCY_PAIRS[i]}:`, e);
+      }
     }
 
-    // Fetch commodities
-    await delay(2000);
-    try {
-      const commodityData = await fetchWithRetry(
-        `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES.join(",")}`
-      );
-      allData = { ...allData, ...commodityData };
-    } catch (e) {
-      console.warn("Commodity fetch failed, continuing with currencies only:", e);
+    // Commodities
+    for (let i = 0; i < COMMODITY_CODES.length; i++) {
+      await delay(1000);
+      try {
+        const data = await fetchWithRetry(
+          `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES[i]}`
+        );
+        allData = { ...allData, ...data };
+      } catch (e) {
+        console.warn(`Failed to fetch commodity ${COMMODITY_CODES[i]}:`, e);
+      }
     }
 
     // 3. Parse and prepare rows
