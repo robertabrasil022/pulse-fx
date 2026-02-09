@@ -53,7 +53,7 @@ serve(async (req) => {
     
     // Single call with all currencies + commodities together
     const allPairs = [...CURRENCY_PAIRS, ...COMMODITY_CODES].join(",");
-    const apiUrl = `https://economia.awesomeapi.com.br/json/last/${allPairs}${awesomeApiKey ? `?key=${awesomeApiKey}` : ""}`;
+    const apiUrl = `https://economia.awesomeapi.com.br/json/last/${allPairs}${awesomeApiKey ? `?token=${awesomeApiKey}` : ""}`;
     
     console.log("Fetching rates...");
     const res = await fetch(apiUrl);
