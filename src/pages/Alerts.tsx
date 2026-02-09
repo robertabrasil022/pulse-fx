@@ -42,7 +42,7 @@ export default function Alerts() {
 
     setIsCreating(true);
     try {
-      const { error } = await supabase.from('commodity_settings').insert({
+      await createCommoditySetting({
         user_id: user.id,
         asset_name: newAlert.asset_name,
         target_currency: newAlert.target_currency,
