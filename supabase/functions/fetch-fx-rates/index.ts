@@ -49,25 +49,48 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // 1. Fetch currency rates
-    const currencyUrl = `https://economia.awesomeapi.com.br/json/last/${CURRENCY_PAIRS.join(",")}`;
-    const currencyRes = await fetch(currencyUrl);
-    if (!currencyRes.ok) {
-      throw new Error(`AwesomeAPI currency error: ${currencyRes.status}`);
+    // Helper: fetch with retry on 429
+    async function fetchWithRetry(url: string, retries = 3): Promise<any> {
+      for (let i = 0; i < retries; i++) {
+        const res = await fetch(url);
+        if (res.ok) return res.json();
+        if (res.status === 429 && i < retries - 1) {
+          console.warn(`Rate limited, waiting ${(i + 1) * 2}s...`);
+          await new Promise((r) => setTimeout(r, (i + 1) * 2000));
+          continue;
+        }
+        if (!res.ok) throw new Error(`API error: ${res.status} for ${url}`);
+      }
     }
-    const currencyData = await currencyRes.json();
+
+    // 1. Fetch currency rates (split into smaller batches to avoid 429)
+    const batch1 = CURRENCY_PAIRS.slice(0, 5);
+    const batch2 = CURRENCY_PAIRS.slice(5);
+
+    const currencyData1 = await fetchWithRetry(
+      `https://economia.awesomeapi.com.br/json/last/${batch1.join(",")}`
+    );
+
+    // Small delay between batches
+    await new Promise((r) => setTimeout(r, 1500));
+
+    const currencyData2 = await fetchWithRetry(
+      `https://economia.awesomeapi.com.br/json/last/${batch2.join(",")}`
+    );
+
+    await new Promise((r) => setTimeout(r, 1500));
 
     // 2. Fetch commodity rates
-    const commodityUrl = `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES.join(",")}`;
-    const commodityRes = await fetch(commodityUrl);
     let commodityData: Record<string, any> = {};
-    if (commodityRes.ok) {
-      commodityData = await commodityRes.json();
-    } else {
-      console.warn(`AwesomeAPI commodity warning: ${commodityRes.status}`);
+    try {
+      commodityData = await fetchWithRetry(
+        `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES.join(",")}`
+      );
+    } catch (e) {
+      console.warn("Commodity fetch failed, continuing with currencies only:", e);
     }
 
-    const allData = { ...currencyData, ...commodityData };
+    const allData = { ...currencyData1, ...currencyData2, ...commodityData };
 
     // 3. Parse and prepare rows
     const rows = Object.entries(allData).map(([key, value]: [string, any]) => {
