@@ -1,107 +1,93 @@
 
 
-# Plano: Desacoplar a Camada de Dados (Repository Pattern)
+# Plano: Integrar AwesomeAPI + API de Commodities ao Dashboard
 
-## Objetivo
+## Situacao Atual
 
-Criar uma camada de abstração entre os componentes/hooks e o banco de dados, permitindo trocar a implementação (Supabase direto, API externa, mock, etc.) sem alterar o restante do código.
+O dashboard lê dados das tabelas `fx_rates` e `fx_insights` no seu Supabase externo, mas **nenhuma API externa alimenta essas tabelas** -- por isso estão vazias e o dashboard não mostra dados.
 
-## Arquitetura Proposta
+## O que sera feito
 
-A ideia e introduzir um padrao **Repository** -- um conjunto de funcoes que encapsulam todas as operacoes de dados. Os hooks continuam existindo (para integrar com React Query), mas delegam ao repositorio.
+Criar uma Edge Function que busca cotacoes da **AwesomeAPI** (cambio) e de uma **API de commodities**, salva os dados na tabela `fx_rates` do seu Supabase externo, e agendar um cron para rodar a cada 30 minutos.
+
+## Fontes de Dados
+
+1. **AwesomeAPI** (gratuita, sem chave): `https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,CNY-BRL,GBP-BRL,JPY-BRL,ARS-BRL,AUD-BRL,RUB-BRL,INR-BRL`
+2. **Commodities**: Usaremos a AwesomeAPI tambem para commodities disponiveis (ouro, prata, bitcoin via `https://economia.awesomeapi.com.br/json/last/XAU,XAG,BTC`), mapeando para os nomes do sistema (Graos, Cafe, Soja, etc. sao precificados via proxy de cambio). Se voce tiver uma API especifica de commodities agricolas, podemos integrar depois.
+
+## Etapas
+
+### 1. Edge Function `fetch-fx-rates`
+
+Nova funcao em `supabase/functions/fetch-fx-rates/index.ts` que:
+
+- Chama a AwesomeAPI para as 9 moedas configuradas
+- Parseia a resposta (bid, ask, pctChange, timestamp)
+- Insere os dados na tabela `fx_rates` do Supabase externo usando a service role key (ou anon key com politica INSERT)
+- Retorna sucesso/erro
+
+### 2. Ajustar politica RLS da tabela `fx_rates`
+
+Atualmente a tabela `fx_rates` no seu Supabase externo so permite SELECT. Precisamos de uma forma de inserir dados. Duas opcoes:
+
+- **Opcao A**: A Edge Function roda no Lovable Cloud e usa a anon key do seu Supabase externo. Voce precisara adicionar uma politica INSERT na tabela `fx_rates` no seu Supabase externo (ou usar a service role key como secret).
+- **Opcao B** (recomendada): Armazenar a **service role key** do seu Supabase externo como secret no Lovable Cloud, e usar na Edge Function para inserir dados sem restricao RLS.
+
+### 3. Cron Job (a cada 30 minutos)
+
+Configurar um cron no Lovable Cloud que chama a Edge Function `fetch-fx-rates` a cada 30 minutos via `pg_cron` + `pg_net`.
+
+### 4. Ajuste no frontend (opcional)
+
+O frontend ja funciona -- ele le de `fx_rates` via `externalSupabase`. Uma vez que a tabela tenha dados, o dashboard exibira tudo automaticamente.
+
+---
+
+## Detalhes Tecnicos
+
+### Edge Function `fetch-fx-rates/index.ts`
 
 ```text
-+-----------------+     +------------------+     +---------------------+
-|  Componentes    | --> |  Hooks (React    | --> |  Repositorio        |
-|  (Dashboard,    |     |  Query + estado) |     |  (fxRatesRepo,     |
-|   Alerts, etc.) |     |                  |     |   preferencesRepo,  |
-+-----------------+     +------------------+     |   commodityRepo,    |
-                                                  |   authRepo)         |
-                                                  +----------+----------+
-                                                             |
-                                                  +----------v----------+
-                                                  |  Implementacao      |
-                                                  |  Supabase (atual)   |
-                                                  |  -- ou --           |
-                                                  |  API Externa        |
-                                                  +---------------------+
+1. Recebe requisicao (POST do cron ou manual)
+2. Chama AwesomeAPI: GET https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,...
+3. Para cada par retornado:
+   - Extrai bid, ask, pctChange, timestamp
+   - Monta objeto { code: "USD/BRL", bid_value, ask_value, pct_change, timestamp }
+4. Conecta ao Supabase externo (usando EXTERNAL_SUPABASE_URL + service role key)
+5. INSERT batch na tabela fx_rates
+6. Retorna { inserted: N, errors: [] }
 ```
 
-## O que muda
+### Secret necessario
 
-### 1. Criar `src/repositories/` com modulos por dominio
+- `EXTERNAL_SUPABASE_SERVICE_ROLE_KEY` -- a service role key do seu projeto externo (para inserir dados sem RLS). Sera solicitada antes da implementacao.
 
-Cada arquivo exporta funcoes puras (sem React) que encapsulam as chamadas ao Supabase:
+### SQL do Cron (executado no Lovable Cloud)
 
-- **`src/repositories/fxRatesRepository.ts`** -- `fetchRates()`, `fetchInsights()`
-- **`src/repositories/commodityRepository.ts`** -- `fetchSettings(userId)`, `createSetting(data)`, `deleteSetting(id)`
-- **`src/repositories/preferencesRepository.ts`** -- `fetchPreferences(userId)`, `createDefaults(userId)`, `updatePreferences(userId, updates)`
-- **`src/repositories/authRepository.ts`** -- `signIn()`, `signUp()`, `signOut()`, `getSession()`, `onAuthStateChange()`
-
-### 2. Atualizar os hooks para usar os repositorios
-
-Os hooks (`useDashboardData`, `usePreferences`, `useAuth`, `useAIInsights`) passam a chamar as funcoes do repositorio em vez de usar `supabase` diretamente.
-
-### 3. Remover chamadas diretas ao Supabase nas paginas
-
-A pagina `Alerts.tsx` hoje faz `supabase.from('commodity_settings').insert(...)` e `.delete(...)` diretamente. Essas chamadas serao movidas para o repositorio e expostas via um novo hook `useCommodityMutations()`.
-
-### 4. Nenhuma mudanca visual
-
-A interface permanece identica. Apenas a organizacao interna do codigo muda.
-
-## Arquivos a criar
-
-| Arquivo | Responsabilidade |
-|---------|-----------------|
-| `src/repositories/fxRatesRepository.ts` | Buscar cotacoes e insights |
-| `src/repositories/commodityRepository.ts` | CRUD de alertas de commodities |
-| `src/repositories/preferencesRepository.ts` | CRUD de preferencias do usuario |
-| `src/repositories/authRepository.ts` | Autenticacao (login, registro, sessao) |
-
-## Arquivos a modificar
-
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/hooks/useDashboardData.ts` | Importar do repositorio em vez de `supabase` |
-| `src/hooks/usePreferences.ts` | Importar do repositorio em vez de `supabase` |
-| `src/hooks/useAuth.tsx` | Importar do repositorio em vez de `supabase` |
-| `src/hooks/useAIInsights.ts` | Importar do repositorio em vez de `supabase` |
-| `src/pages/Alerts.tsx` | Remover `import { supabase }`, usar hook/repositorio |
-
-## Exemplo de como fica
-
-**Repositorio** (`src/repositories/fxRatesRepository.ts`):
-```typescript
-import { supabase } from '@/integrations/supabase/client';
-import { FxRate } from '@/types/database';
-
-export async function fetchFxRates(limit = 50): Promise<FxRate[]> {
-  const { data, error } = await supabase
-    .from('fx_rates')
-    .select('*')
-    .order('timestamp', { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data as FxRate[];
-}
+```text
+Habilitar extensoes pg_cron e pg_net
+Agendar chamada HTTP POST para a Edge Function a cada 30 minutos
 ```
 
-**Hook** (`src/hooks/useDashboardData.ts`):
-```typescript
-import { useQuery } from '@tanstack/react-query';
-import { fetchFxRates } from '@/repositories/fxRatesRepository';
+### Mapeamento AwesomeAPI -> fx_rates
 
-export function useFxRates() {
-  return useQuery({
-    queryKey: ['fx-rates'],
-    queryFn: () => fetchFxRates(),
-    refetchInterval: 30000,
-  });
-}
-```
+| AwesomeAPI code | fx_rates.code |
+|-----------------|---------------|
+| USDBRL          | USD/BRL       |
+| EURBRL          | EUR/BRL       |
+| CNYBRL          | CNY/BRL       |
+| GBPBRL          | GBP/BRL       |
+| JPYBRL          | JPY/BRL       |
+| ARSBRL          | ARS/BRL       |
+| AUDBRL          | AUD/BRL       |
+| RUBBRL          | RUB/BRL       |
+| INRBRL          | INR/BRL       |
 
-## Beneficio
+## Sequencia de Implementacao
 
-Para trocar para uma API externa no futuro, basta alterar a implementacao dentro de cada arquivo em `src/repositories/` -- nenhum hook ou componente precisa ser modificado.
+1. Solicitar a service role key do Supabase externo
+2. Criar a Edge Function `fetch-fx-rates`
+3. Testar a funcao manualmente
+4. Configurar o cron job de 30 minutos
+5. Verificar dados no dashboard
 
