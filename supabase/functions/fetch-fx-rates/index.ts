@@ -49,11 +49,13 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
+    const awesomeApiKey = Deno.env.get("AWESOME_API_KEY");
+    
     // Single call with all currencies + commodities together
     const allPairs = [...CURRENCY_PAIRS, ...COMMODITY_CODES].join(",");
-    const apiUrl = `https://economia.awesomeapi.com.br/json/last/${allPairs}`;
+    const apiUrl = `https://economia.awesomeapi.com.br/json/last/${allPairs}${awesomeApiKey ? `?token=${awesomeApiKey}` : ""}`;
     
-    console.log("Fetching:", apiUrl);
+    console.log("Fetching rates...");
     const res = await fetch(apiUrl);
     
     if (!res.ok) {
