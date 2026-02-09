@@ -15,7 +15,7 @@ export function PulseFXLogo({ className, size = 'md', showText = true }: PulseFX
 
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      {/* Digital Bull Logo - Geometric/Minimalist */}
+      {/* Globe with flow lines logo */}
       <div className={cn('relative', sizes[size].icon)}>
         <svg
           viewBox="0 0 48 48"
@@ -23,55 +23,58 @@ export function PulseFXLogo({ className, size = 'md', showText = true }: PulseFX
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full"
         >
-          {/* Main bull head shape */}
-          <path
-            d="M24 8L8 20V32L24 44L40 32V20L24 8Z"
+          {/* Globe outline */}
+          <circle
+            cx="24"
+            cy="24"
+            r="16"
             className="fill-primary/10 stroke-primary"
-            strokeWidth="1.5"
-          />
-          
-          {/* Left horn */}
-          <path
-            d="M8 20L4 10L12 16"
-            className="stroke-primary"
             strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
           />
-          
-          {/* Right horn */}
+
+          {/* Meridians */}
           <path
-            d="M40 20L44 10L36 16"
-            className="stroke-primary"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          
-          {/* Inner circuit lines - tech feel */}
-          <path
-            d="M24 16V24M18 22L24 28L30 22"
+            d="M24 8C18 12 18 36 24 40"
             className="stroke-primary/60"
             strokeWidth="1.5"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
-          
-          {/* Circuit nodes */}
-          <circle cx="24" cy="16" r="2" className="fill-primary" />
-          <circle cx="18" cy="22" r="1.5" className="fill-primary/60" />
-          <circle cx="30" cy="22" r="1.5" className="fill-primary/60" />
-          <circle cx="24" cy="28" r="2" className="fill-primary" />
-          
-          {/* Bottom accent line */}
           <path
-            d="M16 36H32"
-            className="stroke-primary/40"
-            strokeWidth="1"
+            d="M24 8C30 12 30 36 24 40"
+            className="stroke-primary/60"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+
+          {/* Parallels */}
+          <path
+            d="M10 20C15 18 33 18 38 20"
+            className="stroke-primary/60"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M10 28C15 30 33 30 38 28"
+            className="stroke-primary/60"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+
+          {/* Flow lines */}
+          <path
+            d="M6 16C14 12 20 12 28 10"
+            className="stroke-primary"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M20 38C28 36 34 34 42 30"
+            className="stroke-primary"
+            strokeWidth="2"
             strokeLinecap="round"
           />
         </svg>
-        
+
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full -z-10" />
       </div>
