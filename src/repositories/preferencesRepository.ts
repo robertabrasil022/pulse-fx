@@ -1,8 +1,8 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase } from './externalClient';
 import { UserPreferences } from '@/hooks/usePreferences';
 
 export async function fetchPreferences(userId: string): Promise<UserPreferences | null> {
-  const { data, error } = await supabase
+  const { data, error } = await externalSupabase
     .from('preferences')
     .select('*')
     .eq('user_id', userId)
@@ -13,7 +13,7 @@ export async function fetchPreferences(userId: string): Promise<UserPreferences 
 }
 
 export async function createDefaultPreferences(userId: string, defaults: Partial<UserPreferences>): Promise<UserPreferences> {
-  const { data, error } = await supabase
+  const { data, error } = await externalSupabase
     .from('preferences')
     .insert({ user_id: userId, ...defaults })
     .select()
@@ -24,7 +24,7 @@ export async function createDefaultPreferences(userId: string, defaults: Partial
 }
 
 export async function updatePreferences(userId: string, updates: Partial<UserPreferences>): Promise<UserPreferences> {
-  const { data, error } = await supabase
+  const { data, error } = await externalSupabase
     .from('preferences')
     .update(updates)
     .eq('user_id', userId)
