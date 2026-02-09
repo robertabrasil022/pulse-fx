@@ -50,47 +50,48 @@ serve(async (req) => {
     });
 
     // Helper: fetch with retry on 429
-    async function fetchWithRetry(url: string, retries = 3): Promise<any> {
+    async function fetchWithRetry(url: string, retries = 4): Promise<any> {
       for (let i = 0; i < retries; i++) {
         const res = await fetch(url);
         if (res.ok) return res.json();
         if (res.status === 429 && i < retries - 1) {
-          console.warn(`Rate limited, waiting ${(i + 1) * 2}s...`);
-          await new Promise((r) => setTimeout(r, (i + 1) * 2000));
+          const wait = (i + 1) * 3000;
+          console.warn(`Rate limited, waiting ${wait / 1000}s...`);
+          await new Promise((r) => setTimeout(r, wait));
           continue;
         }
         if (!res.ok) throw new Error(`API error: ${res.status} for ${url}`);
       }
     }
 
-    // 1. Fetch currency rates (split into smaller batches to avoid 429)
-    const batch1 = CURRENCY_PAIRS.slice(0, 5);
-    const batch2 = CURRENCY_PAIRS.slice(5);
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const currencyData1 = await fetchWithRetry(
-      `https://economia.awesomeapi.com.br/json/last/${batch1.join(",")}`
-    );
+    // Fetch in small batches of 3 pairs to avoid 429
+    const batches: string[][] = [];
+    for (let i = 0; i < CURRENCY_PAIRS.length; i += 3) {
+      batches.push(CURRENCY_PAIRS.slice(i, i + 3));
+    }
 
-    // Small delay between batches
-    await new Promise((r) => setTimeout(r, 1500));
+    let allData: Record<string, any> = {};
 
-    const currencyData2 = await fetchWithRetry(
-      `https://economia.awesomeapi.com.br/json/last/${batch2.join(",")}`
-    );
+    for (let i = 0; i < batches.length; i++) {
+      if (i > 0) await delay(2000);
+      const batchData = await fetchWithRetry(
+        `https://economia.awesomeapi.com.br/json/last/${batches[i].join(",")}`
+      );
+      allData = { ...allData, ...batchData };
+    }
 
-    await new Promise((r) => setTimeout(r, 1500));
-
-    // 2. Fetch commodity rates
-    let commodityData: Record<string, any> = {};
+    // Fetch commodities
+    await delay(2000);
     try {
-      commodityData = await fetchWithRetry(
+      const commodityData = await fetchWithRetry(
         `https://economia.awesomeapi.com.br/json/last/${COMMODITY_CODES.join(",")}`
       );
+      allData = { ...allData, ...commodityData };
     } catch (e) {
       console.warn("Commodity fetch failed, continuing with currencies only:", e);
     }
-
-    const allData = { ...currencyData1, ...currencyData2, ...commodityData };
 
     // 3. Parse and prepare rows
     const rows = Object.entries(allData).map(([key, value]: [string, any]) => {
