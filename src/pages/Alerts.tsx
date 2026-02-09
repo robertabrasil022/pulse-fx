@@ -50,7 +50,6 @@ export default function Alerts() {
         alert_threshold: parseFloat(newAlert.alert_threshold),
       });
 
-      if (error) throw error;
 
       toast({
         title: 'Alerta criado',
