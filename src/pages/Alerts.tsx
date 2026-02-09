@@ -77,8 +77,7 @@ export default function Alerts() {
 
   const handleDeleteAlert = async (id: string) => {
     try {
-      const { error } = await supabase.from('commodity_settings').delete().eq('id', id);
-      if (error) throw error;
+      await deleteCommoditySetting(id);
 
       toast({
         title: 'Alerta removido',

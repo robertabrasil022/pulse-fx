@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
+import * as prefsRepo from '@/repositories/preferencesRepository';
 
 export interface UserPreferences {
   id: string;
@@ -36,37 +36,13 @@ export function usePreferences() {
     queryFn: async (): Promise<UserPreferences | null> => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase
-        .from('preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const data = await prefsRepo.fetchPreferences(user.id);
 
-      if (error) {
-        console.error('Error fetching preferences:', error);
-        throw error;
-      }
-
-      // If no preferences exist, create default ones
       if (!data) {
-        const { data: newData, error: insertError } = await supabase
-          .from('preferences')
-          .insert({
-            user_id: user.id,
-            ...DEFAULT_PREFERENCES,
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error creating preferences:', insertError);
-          throw insertError;
-        }
-
-        return newData as UserPreferences;
+        return prefsRepo.createDefaultPreferences(user.id, DEFAULT_PREFERENCES);
       }
 
-      return data as UserPreferences;
+      return data;
     },
     enabled: !!user?.id,
   });
@@ -74,16 +50,7 @@ export function usePreferences() {
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<UserPreferences>) => {
       if (!user?.id) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('preferences')
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as UserPreferences;
+      return prefsRepo.updatePreferences(user.id, updates);
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['preferences', user?.id], data);
@@ -100,7 +67,6 @@ export function usePreferences() {
   };
 }
 
-// Hook to sync theme with preferences from database
 export function useThemeSync() {
   const { preferences } = usePreferences();
 
@@ -108,7 +74,7 @@ export function useThemeSync() {
     if (!preferences?.theme) return;
 
     const root = document.documentElement;
-    
+
     const applyTheme = (isDark: boolean) => {
       if (isDark) {
         root.classList.add('dark');

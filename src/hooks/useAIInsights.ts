@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { FxRate } from '@/types/database';
+import { invokeGenerateInsights } from '@/repositories/fxRatesRepository';
 
 interface AIInsight {
   title: string;
@@ -23,12 +23,11 @@ export function useAIInsights() {
 
   const generateInsights = useCallback(async (rates: FxRate[]) => {
     if (rates.length === 0) return;
-    
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // Get latest rate for each currency
       const latestRates = rates.reduce((acc, rate) => {
         if (!acc[rate.code] || new Date(rate.timestamp) > new Date(acc[rate.code].timestamp)) {
           acc[rate.code] = rate;
@@ -37,22 +36,7 @@ export function useAIInsights() {
       }, {} as Record<string, FxRate>);
 
       const ratesArray = Object.values(latestRates);
-
-      const { data: responseData, error: functionError } = await supabase.functions.invoke(
-        'generate-fx-insights',
-        {
-          body: { rates: ratesArray },
-        }
-      );
-
-      if (functionError) {
-        throw new Error(functionError.message || 'Erro ao gerar insights');
-      }
-
-      if (responseData?.error) {
-        throw new Error(responseData.error);
-      }
-
+      const responseData = await invokeGenerateInsights(ratesArray);
       setData(responseData as AIInsightsResponse);
     } catch (err) {
       console.error('AI Insights error:', err);
@@ -67,11 +51,5 @@ export function useAIInsights() {
     setError(null);
   }, []);
 
-  return {
-    data,
-    isLoading,
-    error,
-    generateInsights,
-    reset,
-  };
+  return { data, isLoading, error, generateInsights, reset };
 }
