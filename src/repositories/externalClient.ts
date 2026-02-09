@@ -1,20 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const EXTERNAL_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL;
-const EXTERNAL_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY;
+const EXTERNAL_URL = 'https://ushuokkihztldkcwspck.supabase.co';
+const EXTERNAL_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzaHVva2tpaHp0bGRrY3dzcGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Nzc5NTcsImV4cCI6MjA4NjE1Mzk1N30.0c-plZCr4veIdtOCDG9RvZGOy7ZtoebOvdQIxLNG4rU';
 
-if (!EXTERNAL_URL || !EXTERNAL_KEY) {
-  console.warn('External Supabase credentials not configured. Falling back to default client.');
-}
-
-export const externalSupabase = createClient(
-  EXTERNAL_URL || '',
-  EXTERNAL_KEY || '',
-  {
-    auth: {
-      storage: localStorage,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-);
+export const externalSupabase = createClient(EXTERNAL_URL, EXTERNAL_KEY, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: 'external-supabase-auth',
+  },
+});

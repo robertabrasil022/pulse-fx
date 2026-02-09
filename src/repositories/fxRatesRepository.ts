@@ -1,8 +1,8 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase } from './externalClient';
 import { FxRate, FxInsight } from '@/types/database';
 
 export async function fetchFxRates(limit = 50): Promise<FxRate[]> {
-  const { data, error } = await supabase
+  const { data, error } = await externalSupabase
     .from('fx_rates')
     .select('*')
     .order('timestamp', { ascending: false })
@@ -13,7 +13,7 @@ export async function fetchFxRates(limit = 50): Promise<FxRate[]> {
 }
 
 export async function fetchFxInsights(limit = 10): Promise<FxInsight[]> {
-  const { data, error } = await supabase
+  const { data, error } = await externalSupabase
     .from('fx_insights')
     .select('*')
     .order('created_at', { ascending: false })
@@ -24,7 +24,7 @@ export async function fetchFxInsights(limit = 10): Promise<FxInsight[]> {
 }
 
 export async function invokeGenerateInsights(rates: FxRate[]) {
-  const { data, error } = await supabase.functions.invoke(
+  const { data, error } = await externalSupabase.functions.invoke(
     'generate-fx-insights',
     { body: { rates } }
   );
