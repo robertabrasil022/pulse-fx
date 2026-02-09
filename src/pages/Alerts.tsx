@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Bell, Plus, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCommoditySettings } from '@/hooks/useDashboardData';
-import { useFxRates } from '@/hooks/useDashboardData';
-import { supabase } from '@/integrations/supabase/client';
+import { useCommoditySettings, useFxRates } from '@/hooks/useDashboardData';
+import { createCommoditySetting, deleteCommoditySetting } from '@/repositories/commodityRepository';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-
 const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 const COMMODITIES = ['Grãos', 'Carnes', 'Óleo', 'Açúcar', 'Café', 'Soja'];
 
