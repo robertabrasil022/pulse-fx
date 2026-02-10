@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Navigate, Link } from 'react-router-dom';
-import { Loader2, RefreshCw, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { RefreshCw, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useFxRates, useFxInsights, useCommoditySettings } from '@/hooks/useDashboardData';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -47,20 +47,7 @@ export default function Dashboard() {
     }).filter(Boolean);
   }, [rates, watchlist]);
 
-  // Conditional returns after all hooks
-  if (!authLoading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const isLoading = ratesLoading || prefsLoading;
+  const isLoading = ratesLoading || prefsLoading || authLoading;
 
   // Dynamic grid columns based on watchlist size
   const getGridCols = (count: number) => {

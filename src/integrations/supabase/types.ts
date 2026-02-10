@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          target_price: number
+          tolerance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency: string
+          id?: string
+          target_price: number
+          tolerance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          target_price?: number
+          tolerance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commodity_settings: {
         Row: {
           alert_threshold: number | null
