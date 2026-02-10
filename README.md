@@ -1,10 +1,8 @@
-
-
-## Project info
+# INFORMAÇÕES DO PROJETO
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-# 🛡️ Sourcing Exchange Shield | FX Intelligence
+## 🛡️ FX PULSE | CÂMBIO E MOEDAS
 
 Sistema inteligente de monitoramento cambial e análise de risco para importação e exportação 
 Desenvolvido como projeto final do programa **DiverseDev (Ada Tech & Mercado Eletrônico)**
