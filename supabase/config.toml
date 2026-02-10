@@ -2,3 +2,6 @@ project_id = "mwjngzidmzxsxdrpstqp"
 
 [functions.fetch-fx-rates]
 verify_jwt = false
+
+[functions.migrate-to-external]
+verify_jwt = false
