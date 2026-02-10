@@ -4,70 +4,29 @@
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-## How can I edit this code?
+# 🛡️ Sourcing Exchange Shield | FX Intelligence
 
-There are several ways of editing your application.
+Sistema inteligente de monitoramento cambial e análise de risco para importação e exportação 
+Desenvolvido como projeto final do programa **DiverseDev (Ada Tech & Mercado Eletrônico)**
 
-**Use Lovable**
+## 🚀 Tecnologias
+- **Frontend:** React + Tailwind CSS (via Lovable)
+- **Backend:** n8n (Orquestração de fluxos)
+- **Lógica:** JavaScript (Function Nodes)
+- **Banco de Dados:** Supabase (PostgreSQL)
+- **API:** AwesomeAPI (Cotações em tempo real)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🏗️ Arquitetura da Solução
+1. **Extração:** Script/Nó HTTP no n8n consome dados da AwesomeAPI
+2. **Processamento (JS):** Cálculos de Média Móvel (7 e 30 dias) e variação percentual
+3. **Persistência:** Dados e logs de integração são salvos no Supabase
+4. **Visualização:** Frontend no Lovable consome o Supabase para exibir insights
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Configuração de Banco (Supabase)
+O esquema relacional contempla as tabelas obrigatórias de dados e logs:
+- `fx_rates`: Histórico de cotações.
+- `profiles`: Preferências do usuário (moeda e idioma)
+- `integration_logs`: Logs de sucesso/erro da automação
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 👥 Equipe e Colaboração
+As funcionalidades são desenvolvidas pelos colaboradores via branches `feature/` para garantir a integridade da `main` sincronizada com o Lovable. 
