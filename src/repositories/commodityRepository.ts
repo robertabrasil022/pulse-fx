@@ -1,8 +1,8 @@
-import { externalSupabase } from './externalClient';
+import { supabase } from '@/integrations/supabase/client';
 import { CommoditySetting } from '@/types/database';
 
 export async function fetchCommoditySettings(userId: string): Promise<CommoditySetting[]> {
-  const { data, error } = await externalSupabase
+  const { data, error } = await supabase
     .from('commodity_settings')
     .select('*')
     .eq('user_id', userId)
@@ -19,7 +19,7 @@ export async function createCommoditySetting(setting: {
   target_price: number;
   alert_threshold: number;
 }) {
-  const { error } = await externalSupabase
+  const { error } = await supabase
     .from('commodity_settings')
     .insert(setting);
 
@@ -27,7 +27,7 @@ export async function createCommoditySetting(setting: {
 }
 
 export async function deleteCommoditySetting(id: string) {
-  const { error } = await externalSupabase
+  const { error } = await supabase
     .from('commodity_settings')
     .delete()
     .eq('id', id);

@@ -1,12 +1,12 @@
-import { externalSupabase } from './externalClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export async function signIn(email: string, password: string) {
-  const { error } = await externalSupabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   return { error };
 }
 
 export async function signUp(email: string, password: string, redirectUrl: string) {
-  const { error } = await externalSupabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: { emailRedirectTo: redirectUrl },
@@ -15,14 +15,21 @@ export async function signUp(email: string, password: string, redirectUrl: strin
 }
 
 export async function signOut() {
-  const { error } = await externalSupabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
   return { error };
 }
 
 export async function getSession() {
-  return externalSupabase.auth.getSession();
+  return supabase.auth.getSession();
 }
 
 export function onAuthStateChange(callback: (event: string, session: any) => void | Promise<void>) {
-  return externalSupabase.auth.onAuthStateChange(callback as any);
+  return supabase.auth.onAuthStateChange(callback as any);
+}
+
+export async function resetPassword(email: string, redirectUrl: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectUrl,
+  });
+  return { error };
 }
