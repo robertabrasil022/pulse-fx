@@ -22,7 +22,7 @@ serve(async (req) => {
       throw new Error("currencies array is required");
     }
 
-    const numDays = Math.min(parseInt(days) || 30, 180);
+    const numDays = Math.min(parseInt(days) || 1, 180);
     const awesomeApiKey = Deno.env.get("AWESOME_API_KEY");
 
     // Fetch sequentially to avoid rate limiting

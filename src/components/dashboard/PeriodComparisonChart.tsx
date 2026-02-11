@@ -11,12 +11,12 @@ interface PeriodComparisonChartProps {
   currencies: string[];
 }
 
-type Period = '30' | '90' | '120';
+type Period = '1' | '3' | '7';
 
 const PERIOD_LABELS: Record<Period, string> = {
-  '30': '30 dias',
-  '90': '90 dias',
-  '120': '120 dias',
+  '1': '1 dia',
+  '3': '3 dias',
+  '7': '1 semana',
 };
 
 const currencyColors: Record<string, { stroke: string; fill: string }> = {
@@ -38,7 +38,7 @@ const CURRENCY_SHORT: Record<string, string> = {
 };
 
 export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps) {
-  const [period, setPeriod] = useState<Period>('30');
+  const [period, setPeriod] = useState<Period>('1');
   const days = parseInt(period);
 
   const { data: historyData, isLoading, isFetching } = useFxHistory(currencies, days);
@@ -116,7 +116,7 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
             </CardDescription>
           </div>
           <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
-            {(['30', '90', '120'] as Period[]).map(p => (
+            {(['1', '3', '7'] as Period[]).map(p => (
               <Button
                 key={p}
                 size="sm"
@@ -205,8 +205,10 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `R$${value.toFixed(2)}`}
-                    domain={['auto', 'auto']}
+                    tickFormatter={(value) => `R$${value.toFixed(4)}`}
+                    domain={['dataMin - 0.01', 'dataMax + 0.01']}
+                    tickCount={12}
+                    padding={{ top: 20, bottom: 20 }}
                   />
                   <Tooltip
                     contentStyle={{
