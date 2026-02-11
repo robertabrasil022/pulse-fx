@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Bell, Clock, Check, Eye } from 'lucide-react';
+import { Loader2, Bell, Clock, Check, Eye, Plus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePreferences } from '@/hooks/usePreferences';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -9,14 +9,45 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
-const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
+const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 
 export default function Preferences() {
   const { user, loading: authLoading } = useAuth();
   const { preferences, isLoading: prefsLoading, updatePreferencesAsync, isUpdating } = usePreferences();
   const { toast } = useToast();
+  const [customPair, setCustomPair] = useState('');
+
+  // Merge preset + any custom currencies the user already has
+  const allCurrencies = Array.from(new Set([
+    ...PRESET_CURRENCIES,
+    ...(preferences?.watchlist || []),
+  ]));
+
+  const handleAddCustomCurrency = async () => {
+    const pair = customPair.trim().toUpperCase();
+    if (!pair || !preferences) return;
+    
+    // Basic validation: must be XXX/YYY format
+    if (!/^[A-Z]{3}\/[A-Z]{3}$/.test(pair)) {
+      toast({ title: 'Formato inválido', description: 'Use o formato XXX/YYY (ex: CHF/BRL)', variant: 'destructive' });
+      return;
+    }
+    if (preferences.watchlist.includes(pair)) {
+      toast({ title: 'Já adicionada', description: `${pair} já está na sua watchlist`, variant: 'destructive' });
+      return;
+    }
+
+    try {
+      await updatePreferencesAsync({ watchlist: [...preferences.watchlist, pair] });
+      setCustomPair('');
+      toast({ title: 'Moeda adicionada', description: `${pair} foi adicionada à sua watchlist` });
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível adicionar a moeda', variant: 'destructive' });
+    }
+  };
 
   const handleWatchlistToggle = async (currency: string) => {
     if (!preferences) return;
@@ -104,9 +135,23 @@ export default function Preferences() {
               Selecione as moedas que deseja monitorar no dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Add custom currency */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ex: CHF/BRL, KRW/BRL..."
+                value={customPair}
+                onChange={(e) => setCustomPair(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCurrency()}
+                className="flex-1"
+              />
+              <Button size="sm" onClick={handleAddCustomCurrency} className="gap-1">
+                <Plus className="h-4 w-4" /> Adicionar
+              </Button>
+            </div>
+            
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {ALL_CURRENCIES.map(currency => (
+              {allCurrencies.map(currency => (
                 <label
                   key={currency}
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${

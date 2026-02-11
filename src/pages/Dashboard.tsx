@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchAlerts } from '@/repositories/alertsRepository';
 
-const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
+const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 const DEFAULT_WATCHLIST = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
 
 export default function Dashboard() {
@@ -32,6 +32,7 @@ export default function Dashboard() {
 
   // Use user's watchlist from preferences, fallback to default
   const watchlist = preferences?.watchlist?.length ? preferences.watchlist : DEFAULT_WATCHLIST;
+  const allCurrencies = Array.from(new Set([...PRESET_CURRENCIES, ...watchlist]));
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['fx-rates'] });
@@ -110,7 +111,7 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-6">
             {/* Conversion Panel (Hero) */}
-            <ConversionPanel rates={rates} currencies={ALL_CURRENCIES} />
+            <ConversionPanel rates={rates} currencies={allCurrencies} />
 
             {/* Currency Cards */}
             <section>

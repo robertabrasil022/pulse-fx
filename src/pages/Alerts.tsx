@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Bell, Plus, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePreferences } from '@/hooks/usePreferences';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +12,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAlerts, createAlert, deleteAlert, Alert } from '@/repositories/alertsRepository';
 
-const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
+const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 
 export default function Alerts() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { preferences } = usePreferences();
+
+  // Merge preset currencies with user's watchlist
+  const availableCurrencies = Array.from(new Set([
+    ...PRESET_CURRENCIES,
+    ...(preferences?.watchlist || []),
+  ]));
 
   const { data: alerts = [], isLoading: alertsLoading } = useQuery({
     queryKey: ['alerts', user?.id],
@@ -90,7 +98,7 @@ export default function Alerts() {
                 <Select value={newAlert.currency} onValueChange={(v) => setNewAlert(prev => ({ ...prev, currency: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ALL_CURRENCIES.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+                    {availableCurrencies.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
