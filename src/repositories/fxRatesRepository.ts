@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase as supabase } from '@/repositories/externalClient';
 import { FxRate, FxInsight } from '@/types/database';
 
 export async function fetchFxRates(limit = 50): Promise<FxRate[]> {
