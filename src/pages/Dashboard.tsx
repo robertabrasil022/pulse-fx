@@ -159,7 +159,7 @@ export default function Dashboard() {
 
             {/* Period Comparison Chart */}
             <section>
-              <PeriodComparisonChart rates={rates} currencies={watchlist} />
+              <PeriodComparisonChart currencies={watchlist} />
             </section>
           </div>
         )}

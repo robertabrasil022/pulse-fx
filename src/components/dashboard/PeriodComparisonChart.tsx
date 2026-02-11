@@ -1,23 +1,22 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { FxRate } from '@/types/database';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useFxHistory } from '@/hooks/useFxHistory';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PeriodComparisonChartProps {
-  rates: FxRate[];
   currencies: string[];
 }
 
-type Period = '30' | '90' | '180';
+type Period = '30' | '90' | '120';
 
 const PERIOD_LABELS: Record<Period, string> = {
   '30': '30 dias',
   '90': '90 dias',
-  '180': '180 dias',
+  '120': '120 dias',
 };
 
 const currencyColors: Record<string, { stroke: string; fill: string }> = {
@@ -38,68 +37,86 @@ const CURRENCY_SHORT: Record<string, string> = {
   'AUD/BRL': 'AUD', 'RUB/BRL': 'RUB', 'INR/BRL': 'INR',
 };
 
-export function PeriodComparisonChart({ rates, currencies }: PeriodComparisonChartProps) {
+export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps) {
   const [period, setPeriod] = useState<Period>('30');
+  const days = parseInt(period);
 
+  const { data: historyData, isLoading, isFetching } = useFxHistory(currencies, days);
+
+  // Build chart data from API response
   const chartData = useMemo(() => {
-    const dataMap = new Map<string, Record<string, number | string>>();
+    if (!historyData || historyData.length === 0) return [];
 
-    rates.forEach(rate => {
-      if (!currencies.includes(rate.code)) return;
-      const date = new Date(rate.timestamp).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
+    const dateMap = new Map<string, Record<string, number | string>>();
+
+    historyData.forEach(({ currency, data }) => {
+      data.forEach(point => {
+        const dateKey = point.date;
+        if (!dateMap.has(dateKey)) {
+          const d = new Date(dateKey);
+          dateMap.set(dateKey, {
+            date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            sortKey: dateKey,
+          });
+        }
+        const entry = dateMap.get(dateKey)!;
+        entry[currency] = point.bid;
       });
-
-      if (!dataMap.has(date)) {
-        dataMap.set(date, { date });
-      }
-
-      const entry = dataMap.get(date)!;
-      if (!entry[rate.code]) {
-        entry[rate.code] = rate.bid_value;
-      }
     });
 
-    return Array.from(dataMap.entries())
-      .map(([, values]) => values)
-      .slice(0, parseInt(period))
-      .reverse();
-  }, [rates, period, currencies]);
+    return Array.from(dateMap.values())
+      .sort((a, b) => (a.sortKey as string).localeCompare(b.sortKey as string));
+  }, [historyData]);
 
-  // Calculate trend stats per currency
+  // Stats: first vs last value per currency
   const trendStats = useMemo(() => {
-    return currencies.map(code => {
-      const values = chartData
-        .map(d => d[code] as number)
-        .filter(v => v !== undefined);
+    if (!historyData) return [];
 
-      if (values.length < 2) return { code, change: 0, first: 0, last: 0 };
-
-      const first = values[0];
-      const last = values[values.length - 1];
+    return historyData.map(({ currency, data }) => {
+      if (data.length < 2) return null;
+      // data comes from API newest first, so reverse
+      const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+      const first = sorted[0].bid;
+      const last = sorted[sorted.length - 1].bid;
       const change = ((last - first) / first) * 100;
+      const high = Math.max(...sorted.map(d => d.high));
+      const low = Math.min(...sorted.map(d => d.low));
 
-      return { code, change, first, last };
-    }).filter(s => s.first > 0);
-  }, [chartData, currencies]);
+      return { currency, change, first, last, high, low };
+    }).filter(Boolean) as { currency: string; change: number; first: number; last: number; high: number; low: number }[];
+  }, [historyData]);
 
   const activeCurrencies = currencies.filter(c =>
     chartData.some(d => d[c] !== undefined)
   );
 
+  if (currencies.length === 0) {
+    return (
+      <Card className="glass-card">
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground text-sm">
+            Selecione moedas na sua watchlist para ver tendências históricas
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="glass-card">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle className="text-lg">Tendências por Período</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Tendências por Período
+            </CardTitle>
             <CardDescription>
-              Análise comparativa das moedas selecionadas na sua watchlist
+              Dados históricos reais da cotação das moedas selecionadas
             </CardDescription>
           </div>
           <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
-            {(['30', '90', '180'] as Period[]).map(p => (
+            {(['30', '90', '120'] as Period[]).map(p => (
               <Button
                 key={p}
                 size="sm"
@@ -116,21 +133,21 @@ export function PeriodComparisonChart({ rates, currencies }: PeriodComparisonCha
           </div>
         </div>
 
-        {/* Trend badges */}
+        {/* Trend summary badges */}
         {trendStats.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {trendStats.map(stat => (
               <div
-                key={stat.code}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/50 border border-border/50"
+                key={stat.currency}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-secondary/50 border border-border/50"
               >
                 <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: currencyColors[stat.code]?.stroke || 'hsl(var(--primary))' }}
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: currencyColors[stat.currency]?.stroke || 'hsl(var(--primary))' }}
                 />
-                <span className="text-xs font-medium">{CURRENCY_SHORT[stat.code]}</span>
+                <span className="text-xs font-semibold">{CURRENCY_SHORT[stat.currency]}</span>
                 <span className={cn(
-                  'text-xs font-semibold flex items-center gap-0.5',
+                  'text-xs font-bold flex items-center gap-0.5',
                   stat.change > 0.5 ? 'text-destructive' : stat.change < -0.5 ? 'text-success' : 'text-muted-foreground'
                 )}>
                   {stat.change > 0.5 ? <TrendingUp className="h-3 w-3" /> :
@@ -138,82 +155,118 @@ export function PeriodComparisonChart({ rates, currencies }: PeriodComparisonCha
                    <Minus className="h-3 w-3" />}
                   {stat.change > 0 ? '+' : ''}{stat.change.toFixed(2)}%
                 </span>
+                <span className="text-[10px] text-muted-foreground ml-1">
+                  R${stat.last.toFixed(4)}
+                </span>
               </div>
             ))}
           </div>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <defs>
-                {activeCurrencies.map(currency => (
-                  <linearGradient key={currency} id={`gradient-${currency.replace('/', '')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={currencyColors[currency]?.stroke || 'hsl(var(--primary))'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={currencyColors[currency]?.stroke || 'hsl(var(--primary))'} stopOpacity={0} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis
-                dataKey="date"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `R$${value.toFixed(2)}`}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  boxShadow: '0 8px 32px hsl(var(--background) / 0.4)',
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: 4 }}
-                formatter={(value: number, name: string) => [
-                  `R$ ${value.toFixed(4)}`,
-                  CURRENCY_SHORT[name] || name
-                ]}
-              />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                formatter={(value) => CURRENCY_SHORT[value] || value}
-                wrapperStyle={{ fontSize: '12px' }}
-              />
-              {activeCurrencies.map(currency => (
-                <Area
-                  key={currency}
-                  type="monotone"
-                  dataKey={currency}
-                  name={currency}
-                  stroke={currencyColors[currency]?.stroke || 'hsl(var(--primary))'}
-                  fill={`url(#gradient-${currency.replace('/', '')})`}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, strokeWidth: 2 }}
-                  connectNulls
-                />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
 
-        <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/50">
-          <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Dica:</span> O gráfico exibe a evolução
-            das cotações das moedas da sua watchlist nos últimos {PERIOD_LABELS[period]}.
-            Use os botões acima para alternar entre períodos e identificar tendências.
-          </p>
-        </div>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-[350px] w-full rounded-lg" />
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[350px]">
+            <p className="text-sm text-muted-foreground">Sem dados históricos disponíveis</p>
+          </div>
+        ) : (
+          <>
+            <div className="h-[350px] relative">
+              {isFetching && (
+                <div className="absolute top-2 right-2 z-10">
+                  <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                </div>
+              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <defs>
+                    {activeCurrencies.map(currency => (
+                      <linearGradient key={currency} id={`hist-gradient-${currency.replace('/', '')}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={currencyColors[currency]?.stroke || 'hsl(var(--primary))'} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={currencyColors[currency]?.stroke || 'hsl(var(--primary))'} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `R$${value.toFixed(2)}`}
+                    domain={['auto', 'auto']}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      boxShadow: '0 8px 32px hsl(var(--background) / 0.4)',
+                    }}
+                    labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: 4 }}
+                    formatter={(value: number, name: string) => [
+                      `R$ ${value.toFixed(4)}`,
+                      CURRENCY_SHORT[name] || name
+                    ]}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => CURRENCY_SHORT[value] || value}
+                    wrapperStyle={{ fontSize: '12px' }}
+                  />
+                  {activeCurrencies.map(currency => (
+                    <Area
+                      key={currency}
+                      type="monotone"
+                      dataKey={currency}
+                      name={currency}
+                      stroke={currencyColors[currency]?.stroke || 'hsl(var(--primary))'}
+                      fill={`url(#hist-gradient-${currency.replace('/', '')})`}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 2 }}
+                      connectNulls
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Min/Max summary table */}
+            {trendStats.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {trendStats.map(stat => (
+                  <div key={stat.currency} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: currencyColors[stat.currency]?.stroke }}
+                      />
+                      <span className="text-xs font-semibold">{CURRENCY_SHORT[stat.currency]}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>Mín: R${stat.low.toFixed(4)}</span>
+                      <span>Máx: R${stat.high.toFixed(4)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );
