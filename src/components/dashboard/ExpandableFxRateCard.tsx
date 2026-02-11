@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { FxRate } from '@/types/database';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useFormatting } from '@/hooks/useFormatting';
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,6 +18,7 @@ interface ExpandableFxRateCardProps {
 
 export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRateCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { formatNumber, formatPercentage } = useFormatting();
   
   const isPositive = rate.pct_change > 0;
   const isNegative = rate.pct_change < 0;
@@ -97,7 +99,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Compra</p>
                 <p className="stat-value text-foreground">
-                  {Number(rate.bid_value).toFixed(4)}
+                  {formatNumber(Number(rate.bid_value))}
                 </p>
               </div>
               
@@ -105,7 +107,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Venda</p>
                   <p className="text-xl font-semibold text-muted-foreground">
-                    {Number(rate.ask_value).toFixed(4)}
+                    {formatNumber(Number(rate.ask_value))}
                   </p>
                 </div>
                 
@@ -115,8 +117,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
                   isNegative && "fx-badge-bearish",
                   !isPositive && !isNegative && "fx-badge-neutral"
                 )}>
-                  {isPositive && '+'}
-                  {Number(rate.pct_change).toFixed(2)}%
+                  {formatPercentage(Number(rate.pct_change))}
                 </div>
               </div>
             </div>
@@ -126,7 +127,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Spread</span>
                 <span className="text-foreground font-medium">
-                  {((Number(rate.ask_value) - Number(rate.bid_value)) * 10000).toFixed(1)} pips
+                  {formatNumber((Number(rate.ask_value) - Number(rate.bid_value)) * 10000)} pips
                 </span>
               </div>
             </div>
@@ -144,7 +145,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">Mínima</p>
-                  <p className="text-sm font-medium text-foreground">{minBid.toFixed(4)}</p>
+                  <p className="text-sm font-medium text-foreground">{formatNumber(minBid)}</p>
                 </div>
                 <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -158,7 +159,7 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
                 </div>
                 <div className="flex-1 text-right">
                   <p className="text-xs text-muted-foreground mb-1">Máxima</p>
-                  <p className="text-sm font-medium text-foreground">{maxBid.toFixed(4)}</p>
+                  <p className="text-sm font-medium text-foreground">{formatNumber(maxBid)}</p>
                 </div>
               </div>
             </div>
@@ -180,15 +181,14 @@ export function ExpandableFxRateCard({ rate, historicalRates }: ExpandableFxRate
                         })}
                       </span>
                       <div className="flex items-center gap-4">
-                        <span className="text-foreground">{Number(histRate.bid_value).toFixed(4)}</span>
+                        <span className="text-foreground">{formatNumber(Number(histRate.bid_value))}</span>
                         <span className={cn(
                           "text-xs px-2 py-0.5 rounded",
                           Number(histRate.pct_change) > 0 && "bg-success/10 text-success",
                           Number(histRate.pct_change) < 0 && "bg-destructive/10 text-destructive",
                           Number(histRate.pct_change) === 0 && "bg-muted text-muted-foreground"
                         )}>
-                          {Number(histRate.pct_change) > 0 && '+'}
-                          {Number(histRate.pct_change).toFixed(2)}%
+                          {formatPercentage(Number(histRate.pct_change))}
                         </span>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FxRate } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { useFormatting } from '@/hooks/useFormatting';
 
 interface CurrencyCardProps {
   code: string;
@@ -12,6 +13,7 @@ interface CurrencyCardProps {
 }
 
 export function CurrencyCard({ code, rates, onClick }: CurrencyCardProps) {
+  const { formatNumber, formatPercentage } = useFormatting();
   const { latestRate, sparklineData, change24h } = useMemo(() => {
     const currencyRates = rates
       .filter(r => r.code === code)
@@ -119,14 +121,14 @@ export function CurrencyCard({ code, rates, onClick }: CurrencyCardProps) {
           )}>
             {getChangeIcon(change24h)}
             <span className="tabular-nums">
-              {change24h > 0 ? '+' : ''}{change24h.toFixed(2)}%
+              {formatPercentage(change24h)}
             </span>
           </div>
         </div>
 
         {/* Current Rate */}
         <div className="text-2xl font-bold tabular-nums text-foreground">
-          R$ {latestRate.bid_value.toFixed(4)}
+          R$ {formatNumber(latestRate.bid_value)}
         </div>
 
         {/* Sparkline */}
@@ -146,8 +148,8 @@ export function CurrencyCard({ code, rates, onClick }: CurrencyCardProps) {
 
         {/* Bid/Ask */}
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Compra: R$ {latestRate.bid_value.toFixed(4)}</span>
-          <span>Venda: R$ {latestRate.ask_value.toFixed(4)}</span>
+          <span>Compra: R$ {formatNumber(latestRate.bid_value)}</span>
+          <span>Venda: R$ {formatNumber(latestRate.ask_value)}</span>
         </div>
       </CardContent>
     </Card>

@@ -1,14 +1,14 @@
 import { Navigate } from 'react-router-dom';
-import { Loader2, Bell, Clock, Check, Eye, X } from 'lucide-react';
+import { Loader2, Eye, Monitor, Hash, Calendar, BarChart3, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePreferences } from '@/hooks/usePreferences';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useFormatting } from '@/hooks/useFormatting';
 
 const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 
@@ -16,6 +16,7 @@ export default function Preferences() {
   const { user, loading: authLoading } = useAuth();
   const { preferences, isLoading: prefsLoading, updatePreferencesAsync, isUpdating } = usePreferences();
   const { toast } = useToast();
+  const { formatNumber, formatDate } = useFormatting();
 
   // Use available preset currencies
   const allCurrencies = PRESET_CURRENCIES;
@@ -38,25 +39,17 @@ export default function Preferences() {
     }
   };
 
-  const handleNotificationChange = async (field: 'notifications_email' | 'notifications_push' | 'quiet_hours_enabled', value: boolean) => {
+  const handleDisplayChange = async (field: keyof Pick<typeof preferences, 'number_format' | 'decimal_places' | 'date_format' | 'chart_default_period' | 'auto_refresh_interval'>, value: any) => {
     try {
       await updatePreferencesAsync({ [field]: value });
+      toast({
+        title: 'Configuração atualizada',
+        description: 'Suas preferências de visualização foram salvas',
+      });
     } catch (error) {
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar as configurações',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleQuietHoursChange = async (field: 'quiet_hours_start' | 'quiet_hours_end', value: string) => {
-    try {
-      await updatePreferencesAsync({ [field]: value });
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar o horário',
         variant: 'destructive',
       });
     }
@@ -128,84 +121,166 @@ export default function Preferences() {
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
+        {/* Display & Formatting Settings */}
         <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notificações
+              <Monitor className="h-5 w-5" />
+              Personalização de Visualização
             </CardTitle>
             <CardDescription>
-              Configure como deseja receber alertas
+              Configure como os dados são exibidos
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Notificações por Email</Label>
-                <p className="text-sm text-muted-foreground">Receber alertas por email</p>
+            {/* Number Format */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <Label>Formato de Números</Label>
               </div>
-              <Switch
-                checked={preferences?.notifications_email || false}
-                onCheckedChange={(checked) => handleNotificationChange('notifications_email', checked)}
-              />
+              <Select
+                value={preferences?.number_format || 'pt-BR'}
+                onValueChange={(value) => handleDisplayChange('number_format', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pt-BR">
+                    <div className="flex flex-col items-start">
+                      <span>Brasileiro (pt-BR)</span>
+                      <span className="text-xs text-muted-foreground">{formatNumber(5234.5)}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="en-US">
+                    <div className="flex flex-col items-start">
+                      <span>Internacional (en-US)</span>
+                      <span className="text-xs text-muted-foreground">5,234.50</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Notificações Push</Label>
-                <p className="text-sm text-muted-foreground">Receber alertas no navegador</p>
-              </div>
-              <Switch
-                checked={preferences?.notifications_push || false}
-                onCheckedChange={(checked) => handleNotificationChange('notifications_push', checked)}
-              />
+            {/* Decimal Places */}
+            <div className="space-y-3">
+              <Label>Casas Decimais</Label>
+              <Select
+                value={String(preferences?.decimal_places || 2)}
+                onValueChange={(value) => handleDisplayChange('decimal_places', parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">
+                    <div className="flex flex-col items-start">
+                      <span>2 decimais</span>
+                      <span className="text-xs text-muted-foreground">R$ 5,23</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="4">
+                    <div className="flex flex-col items-start">
+                      <span>4 decimais</span>
+                      <span className="text-xs text-muted-foreground">R$ 5,2345</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="6">
+                    <div className="flex flex-col items-start">
+                      <span>6 decimais (precisão máxima)</span>
+                      <span className="text-xs text-muted-foreground">R$ 5,234567</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="border-t border-border pt-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Horário Silencioso
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Pausar notificações durante um período
-                  </p>
+            {/* Date Format */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Label>Formato de Data</Label>
+              </div>
+              <Select
+                value={preferences?.date_format || 'DD/MM/YYYY'}
+                onValueChange={(value) => handleDisplayChange('date_format', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DD/MM/YYYY">
+                    <div className="flex flex-col items-start">
+                      <span>DD/MM/YYYY</span>
+                      <span className="text-xs text-muted-foreground">{formatDate(new Date())}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="MM/DD/YYYY">
+                    <div className="flex flex-col items-start">
+                      <span>MM/DD/YYYY</span>
+                      <span className="text-xs text-muted-foreground">11/02/2026</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="YYYY-MM-DD">
+                    <div className="flex flex-col items-start">
+                      <span>YYYY-MM-DD (ISO)</span>
+                      <span className="text-xs text-muted-foreground">2026-02-11</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="border-t border-border pt-4 space-y-6">
+              {/* Chart Period */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <Label>Período Padrão dos Gráficos</Label>
                 </div>
-                <Switch
-                  checked={preferences?.quiet_hours_enabled || false}
-                  onCheckedChange={(checked) => handleNotificationChange('quiet_hours_enabled', checked)}
-                />
+                <Select
+                  value={preferences?.chart_default_period || '7d'}
+                  onValueChange={(value) => handleDisplayChange('chart_default_period', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24h">Últimas 24 horas</SelectItem>
+                    <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                    <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                    <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {preferences?.quiet_hours_enabled && (
-                <div className="grid grid-cols-2 gap-4 animate-fade-in">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Início</Label>
-                    <input
-                      type="time"
-                      value={preferences?.quiet_hours_start?.slice(0, 5) || '22:00'}
-                      onChange={(e) => handleQuietHoursChange('quiet_hours_start', e.target.value + ':00')}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Fim</Label>
-                    <input
-                      type="time"
-                      value={preferences?.quiet_hours_end?.slice(0, 5) || '08:00'}
-                      onChange={(e) => handleQuietHoursChange('quiet_hours_end', e.target.value + ':00')}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
-                    />
-                  </div>
+              {/* Auto Refresh */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                  <Label>Atualização Automática</Label>
                 </div>
-              )}
+                <Select
+                  value={String(preferences?.auto_refresh_interval || 5)}
+                  onValueChange={(value) => handleDisplayChange('auto_refresh_interval', parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Desativada</SelectItem>
+                    <SelectItem value="1">A cada 1 minuto</SelectItem>
+                    <SelectItem value="5">A cada 5 minutos</SelectItem>
+                    <SelectItem value="15">A cada 15 minutos</SelectItem>
+                    <SelectItem value="30">A cada 30 minutos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Info about theme */}
         <p className="text-sm text-muted-foreground text-center">
           💡 Para alterar o tema (claro/escuro), use o botão na barra de navegação superior.
         </p>

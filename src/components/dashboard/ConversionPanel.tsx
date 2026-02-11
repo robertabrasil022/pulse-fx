@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FxRate } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { useFormatting } from '@/hooks/useFormatting';
 
 interface ConversionPanelProps {
   rates: FxRate[];
@@ -13,6 +14,7 @@ interface ConversionPanelProps {
 }
 
 export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
+  const { formatNumber, formatPercentage } = useFormatting();
   const [amount, setAmount] = useState<string>('1000');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('USD/BRL');
   const [isReversed, setIsReversed] = useState(false); // false = foreign→BRL, true = BRL→foreign
@@ -81,12 +83,6 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
     }
   }, [amount, latestRate, isReversed]);
 
-  const formatChange = (value: number) => {
-    const formatted = Math.abs(value).toFixed(2);
-    if (value > 0) return `+${formatted}%`;
-    if (value < 0) return `-${formatted}%`;
-    return `${formatted}%`;
-  };
 
   const getChangeColor = (value: number) => {
     if (value > 0) return 'text-success';
@@ -105,13 +101,8 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
   const toCurrency = isReversed ? currencyBase : 'BRL';
 
   const formatResult = (value: number) => {
-    if (isReversed) {
-      // Foreign currency - show more decimals for small values
-      return value < 1 
-        ? value.toFixed(4) 
-        : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-    }
-    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Use custom formatting with proper decimals for foreign currencies
+    return formatNumber(value);
   };
 
   const getCurrencySymbol = (currency: string) => {
@@ -209,13 +200,13 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
         {latestRate && (
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
             <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
-              Taxa de {rateType}: <span className="font-medium text-foreground">R$ {rate.toFixed(4)}</span>
+              Taxa de {rateType}: <span className="font-medium text-foreground">R$ {formatNumber(rate)}</span>
             </div>
             <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
-              Compra: <span className="font-medium text-foreground">R$ {latestRate.bid_value.toFixed(4)}</span>
+              Compra: <span className="font-medium text-foreground">R$ {formatNumber(latestRate.bid_value)}</span>
             </div>
             <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
-              Venda: <span className="font-medium text-foreground">R$ {latestRate.ask_value.toFixed(4)}</span>
+              Venda: <span className="font-medium text-foreground">R$ {formatNumber(latestRate.ask_value)}</span>
             </div>
           </div>
         )}
@@ -228,7 +219,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
               <span>Variação 24h</span>
             </div>
             <span className={cn('text-xl font-bold tabular-nums', getChangeColor(kpis.change24h))}>
-              {formatChange(kpis.change24h)}
+              {formatPercentage(kpis.change24h)}
             </span>
           </div>
 
@@ -238,7 +229,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
               <span>Variação 7d</span>
             </div>
             <span className={cn('text-xl font-bold tabular-nums', getChangeColor(kpis.change7d))}>
-              {formatChange(kpis.change7d)}
+              {formatPercentage(kpis.change7d)}
             </span>
           </div>
 
@@ -248,7 +239,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
               <span>Variação 30d</span>
             </div>
             <span className={cn('text-xl font-bold tabular-nums', getChangeColor(kpis.change30d))}>
-              {formatChange(kpis.change30d)}
+              {formatPercentage(kpis.change30d)}
             </span>
           </div>
 
@@ -261,7 +252,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
               'text-xl font-bold tabular-nums',
               kpis.volatility7d > 2 ? 'text-warning' : 'text-foreground'
             )}>
-              {kpis.volatility7d.toFixed(2)}%
+              {formatPercentage(kpis.volatility7d)}
             </span>
           </div>
         </div>

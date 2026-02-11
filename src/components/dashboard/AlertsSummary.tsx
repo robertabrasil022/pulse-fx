@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert } from '@/repositories/alertsRepository';
 import { FxRate } from '@/types/database';
 import { cn } from '@/lib/utils';
+import { useFormatting } from '@/hooks/useFormatting';
 
 interface AlertsSummaryProps {
   alerts: Alert[];
@@ -27,6 +28,8 @@ const currencyIcons: Record<string, string> = {
 };
 
 export function AlertsSummary({ alerts, rates }: AlertsSummaryProps) {
+  const { formatNumber, formatPercentage } = useFormatting();
+  
   const alertsWithStatus = useMemo(() => {
     return alerts.map(alert => {
       const currencyRates = rates.filter(r => r.code === alert.currency);
@@ -155,7 +158,7 @@ export function AlertsSummary({ alerts, rates }: AlertsSummaryProps) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    Alvo: R$ {alert.target_price?.toFixed(2)}
+                    Alvo: R$ {formatNumber(alert.target_price || 0)}
                   </span>
                   {alert.currentRate && (
                     <span className={cn(
@@ -167,7 +170,7 @@ export function AlertsSummary({ alerts, rates }: AlertsSummaryProps) {
                       ) : (
                         <TrendingDown className="h-3 w-3" />
                       )}
-                      R$ {alert.currentRate.toFixed(4)}
+                      R$ {formatNumber(alert.currentRate)}
                     </span>
                   )}
                 </div>
@@ -176,7 +179,7 @@ export function AlertsSummary({ alerts, rates }: AlertsSummaryProps) {
 
                 {alert.currentRate && (
                   <p className="text-xs text-muted-foreground text-right">
-                    {alert.distance > 0 ? '+' : ''}{alert.distance.toFixed(2)}% do alvo
+                    {formatPercentage(alert.distance)} do alvo
                   </p>
                 )}
               </div>

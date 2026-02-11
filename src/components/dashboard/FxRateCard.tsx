@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FxRate } from '@/types/database';
+import { useFormatting } from '@/hooks/useFormatting';
 
 interface FxRateCardProps {
   rate: FxRate;
@@ -8,6 +9,7 @@ interface FxRateCardProps {
 }
 
 export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
+  const { formatNumber, formatPercentage } = useFormatting();
   const isPositive = rate.pct_change > 0;
   const isNegative = rate.pct_change < 0;
   
@@ -59,7 +61,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Compra</p>
             <p className="stat-value text-foreground">
-              {rate.bid_value.toFixed(4)}
+              {formatNumber(rate.bid_value)}
             </p>
           </div>
           
@@ -67,7 +69,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Venda</p>
               <p className="text-xl font-semibold text-muted-foreground">
-                {rate.ask_value.toFixed(4)}
+                {formatNumber(rate.ask_value)}
               </p>
             </div>
             
@@ -77,8 +79,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
               isNegative && "fx-badge-bearish",
               !isPositive && !isNegative && "fx-badge-neutral"
             )}>
-              {isPositive && '+'}
-              {rate.pct_change.toFixed(2)}%
+              {formatPercentage(rate.pct_change)}
             </div>
           </div>
         </div>
@@ -88,7 +89,7 @@ export function FxRateCard({ rate, previousRate }: FxRateCardProps) {
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Spread</span>
             <span className="text-foreground font-medium">
-              {((rate.ask_value - rate.bid_value) * 10000).toFixed(1)} pips
+              {formatNumber((rate.ask_value - rate.bid_value) * 10000)} pips
             </span>
           </div>
         </div>

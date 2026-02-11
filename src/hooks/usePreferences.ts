@@ -8,11 +8,12 @@ export interface UserPreferences {
   user_id: string;
   theme: 'light' | 'dark' | 'system';
   watchlist: string[];
-  notifications_email: boolean;
-  notifications_push: boolean;
-  quiet_hours_enabled: boolean;
-  quiet_hours_start: string;
-  quiet_hours_end: string;
+  // Display/Formatting preferences
+  number_format: 'pt-BR' | 'en-US';
+  decimal_places: 2 | 4 | 6;
+  date_format: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+  chart_default_period: '24h' | '7d' | '30d' | '90d';
+  auto_refresh_interval: 0 | 1 | 5 | 15 | 30;
   created_at: string;
   updated_at: string;
 }
@@ -22,11 +23,11 @@ const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL'
 const DEFAULT_PREFERENCES: Partial<UserPreferences> = {
   theme: 'system',
   watchlist: [],
-  notifications_email: true,
-  notifications_push: false,
-  quiet_hours_enabled: false,
-  quiet_hours_start: '22:00:00',
-  quiet_hours_end: '08:00:00',
+  number_format: 'pt-BR',
+  decimal_places: 2,
+  date_format: 'DD/MM/YYYY',
+  chart_default_period: '7d',
+  auto_refresh_interval: 5,
 };
 
 export function usePreferences() {
