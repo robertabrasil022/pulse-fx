@@ -25,6 +25,19 @@ O esquema relacional contempla as tabelas obrigatórias de dados e logs:
 - `fx_rates`: Histórico de cotações.
 - `profiles`: Preferências do usuário (moeda e idioma)
 - `integration_logs`: Logs de sucesso/erro da automação
+## Fluxo N8N
+1. **Buscar Cotações via API (`HTTP Request`)**:
+   - Captura em tempo real os valores de USD, EUR e CNY através da **AwesomeAPI**.
+2. **Formatar Dados de Câmbio (`Edit Fields`)**:
+   - Padronização do JSON, selecionando apenas o valor de compra (`bid`) e adicionando metadados de tempo (*timestamp*).
+3. **Buscar Alertas Pendentes (`Get many rows`)**:
+   - Consulta ao **Supabase** para identificar alertas ativos onde o status `ja_disparado` é `FALSE`.
+4. **Lógica de Disparo (`Code in JavaScript`)**:
+   - Algoritmo que cruza o preço de mercado com o preço-alvo do usuário. Caso a condição (Preço Atual <= Preço Alvo) seja atingida, o fluxo gera uma notificação personalizada.
+5. **Notificação Automática (`Send a message`)**:
+   - Disparo de e-mail via Gmail confirmando que o preço desejado foi atingido.
+6. **Atualização de Status (`Update a row`)**:
+   - Governança de dados via *Soft Update*, alterando o campo `ja_disparado` para `TRUE` no Supabase para evitar redundância de e-mails.
 
 ## 👥 Equipe e Colaboração
 As funcionalidades são desenvolvidas pelos colaboradores via branches `feature/` para garantir a integridade da `main` sincronizada com o Lovable. 
