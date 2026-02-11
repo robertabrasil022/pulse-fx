@@ -2,17 +2,18 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useFxRates, useFxInsights, useCommoditySettings } from '@/hooks/useDashboardData';
+import { useFxRates, useFxInsights } from '@/hooks/useDashboardData';
 import { usePreferences } from '@/hooks/usePreferences';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ConversionPanel } from '@/components/dashboard/ConversionPanel';
 import { CurrencyCard } from '@/components/dashboard/CurrencyCard';
 import { AIMarketInsights } from '@/components/dashboard/AIMarketInsights';
 import { PeriodComparisonChart } from '@/components/dashboard/PeriodComparisonChart';
-import { CommoditySummary } from '@/components/dashboard/CommoditySummary';
+import { AlertsSummary } from '@/components/dashboard/AlertsSummary';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { fetchAlerts } from '@/repositories/alertsRepository';
 
 const ALL_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 const DEFAULT_WATCHLIST = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
@@ -21,8 +22,12 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const { data: rates = [], isLoading: ratesLoading, isFetching, dataUpdatedAt } = useFxRates();
   const { data: insights = [] } = useFxInsights();
-  const { data: commoditySettings = [] } = useCommoditySettings(user?.id);
   const { preferences, isLoading: prefsLoading } = usePreferences();
+  const { data: alerts = [] } = useQuery({
+    queryKey: ['alerts', user?.id],
+    queryFn: () => fetchAlerts(user!.id),
+    enabled: !!user?.id,
+  });
   const queryClient = useQueryClient();
 
   // Use user's watchlist from preferences, fallback to default
@@ -31,7 +36,7 @@ export default function Dashboard() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['fx-rates'] });
     queryClient.invalidateQueries({ queryKey: ['fx-insights'] });
-    queryClient.invalidateQueries({ queryKey: ['commodity-settings'] });
+    queryClient.invalidateQueries({ queryKey: ['alerts'] });
   };
 
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : undefined;
@@ -142,9 +147,9 @@ export default function Dashboard() {
               )}
             </section>
 
-            {/* Commodity Summary - Shows user's monitored commodities */}
+            {/* Alerts Summary */}
             <section>
-              <CommoditySummary settings={commoditySettings} rates={rates} />
+              <AlertsSummary alerts={alerts} rates={rates} />
             </section>
 
             {/* AI Insights Section */}
