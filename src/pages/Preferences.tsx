@@ -1,14 +1,14 @@
-import { Navigate } from 'react-router-dom';
-import { Loader2, Eye, Monitor, Hash, Calendar, BarChart3, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { usePreferences } from '@/hooks/usePreferences';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { useFormatting } from '@/hooks/useFormatting';
+import { usePreferences, UserPreferences } from '@/hooks/usePreferences';
+import { Calendar, Eye, Hash, Loader2, Monitor, RefreshCw } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
 
@@ -23,11 +23,11 @@ export default function Preferences() {
 
   const handleWatchlistToggle = async (currency: string) => {
     if (!preferences) return;
-    
+
     const newWatchlist = preferences.watchlist.includes(currency)
       ? preferences.watchlist.filter(c => c !== currency)
       : [...preferences.watchlist, currency];
-    
+
     try {
       await updatePreferencesAsync({ watchlist: newWatchlist });
     } catch (error) {
@@ -39,7 +39,10 @@ export default function Preferences() {
     }
   };
 
-  const handleDisplayChange = async (field: keyof Pick<typeof preferences, 'number_format' | 'decimal_places' | 'date_format' | 'chart_default_period' | 'auto_refresh_interval'>, value: any) => {
+  type DisplayField = keyof Pick<UserPreferences, 'number_format' | 'decimal_places' | 'date_format' | 'auto_refresh_interval'>;
+  type DisplayValue = UserPreferences[DisplayField];
+
+  const handleDisplayChange = async (field: DisplayField, value: DisplayValue) => {
     try {
       await updatePreferencesAsync({ [field]: value });
       toast({
@@ -141,7 +144,7 @@ export default function Preferences() {
               </div>
               <Select
                 value={preferences?.number_format || 'pt-BR'}
-                onValueChange={(value) => handleDisplayChange('number_format', value)}
+                onValueChange={(value) => handleDisplayChange('number_format', value as UserPreferences['number_format'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -168,7 +171,7 @@ export default function Preferences() {
               <Label>Casas Decimais</Label>
               <Select
                 value={String(preferences?.decimal_places || 2)}
-                onValueChange={(value) => handleDisplayChange('decimal_places', parseInt(value))}
+                onValueChange={(value) => handleDisplayChange('decimal_places', Number.parseInt(value, 10) as UserPreferences['decimal_places'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -204,7 +207,7 @@ export default function Preferences() {
               </div>
               <Select
                 value={preferences?.date_format || 'DD/MM/YYYY'}
-                onValueChange={(value) => handleDisplayChange('date_format', value)}
+                onValueChange={(value) => handleDisplayChange('date_format', value as UserPreferences['date_format'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -233,28 +236,6 @@ export default function Preferences() {
             </div>
 
             <div className="border-t border-border pt-4 space-y-6">
-              {/* Chart Period */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  <Label>Período Padrão dos Gráficos</Label>
-                </div>
-                <Select
-                  value={preferences?.chart_default_period || '7d'}
-                  onValueChange={(value) => handleDisplayChange('chart_default_period', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="24h">Últimas 24 horas</SelectItem>
-                    <SelectItem value="7d">Últimos 7 dias</SelectItem>
-                    <SelectItem value="30d">Últimos 30 dias</SelectItem>
-                    <SelectItem value="90d">Últimos 90 dias</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Auto Refresh */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -263,7 +244,7 @@ export default function Preferences() {
                 </div>
                 <Select
                   value={String(preferences?.auto_refresh_interval || 5)}
-                  onValueChange={(value) => handleDisplayChange('auto_refresh_interval', parseInt(value))}
+                  onValueChange={(value) => handleDisplayChange('auto_refresh_interval', Number.parseInt(value, 10) as UserPreferences['auto_refresh_interval'])}
                 >
                   <SelectTrigger>
                     <SelectValue />

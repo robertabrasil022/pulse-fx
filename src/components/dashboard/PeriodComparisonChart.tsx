@@ -1,22 +1,22 @@
-import { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFxHistory } from '@/hooks/useFxHistory';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Calendar, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface PeriodComparisonChartProps {
   currencies: string[];
 }
 
-type Period = '1' | '3' | '7';
+type Period = '7' | '15' | '30';
 
 const PERIOD_LABELS: Record<Period, string> = {
-  '1': '1 dia',
-  '3': '3 dias',
-  '7': '1 semana',
+  '7': '7 dias',
+  '15': '15 dias',
+  '30': '30 dias',
 };
 
 const currencyColors: Record<string, { stroke: string; fill: string }> = {
@@ -38,7 +38,7 @@ const CURRENCY_SHORT: Record<string, string> = {
 };
 
 export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps) {
-  const [period, setPeriod] = useState<Period>('1');
+  const [period, setPeriod] = useState<Period>('7');
   const days = parseInt(period);
 
   const { data: historyData, isLoading, isFetching } = useFxHistory(currencies, days);
@@ -51,11 +51,12 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
 
     historyData.forEach(({ currency, data }) => {
       data.forEach(point => {
-        const dateKey = point.date;
+        const pointDate = new Date(point.date);
+        const dateKey = pointDate.toISOString();
         if (!dateMap.has(dateKey)) {
-          const d = new Date(dateKey);
           dateMap.set(dateKey, {
-            date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            label: pointDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            fullLabel: pointDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             sortKey: dateKey,
           });
         }
@@ -116,7 +117,7 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
             </CardDescription>
           </div>
           <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
-            {(['1', '3', '7'] as Period[]).map(p => (
+            {(['7', '15', '30'] as Period[]).map(p => (
               <Button
                 key={p}
                 size="sm"
@@ -193,12 +194,13 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis
-                    dataKey="date"
+                    dataKey="label"
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
                     interval="preserveStartEnd"
+                    minTickGap={18}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
@@ -218,6 +220,10 @@ export function PeriodComparisonChart({ currencies }: PeriodComparisonChartProps
                       boxShadow: '0 8px 32px hsl(var(--background) / 0.4)',
                     }}
                     labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: 4 }}
+                    labelFormatter={(label, payload) => {
+                      const item = payload?.[0]?.payload as { fullLabel?: string } | undefined;
+                      return item?.fullLabel ?? String(label);
+                    }}
                     formatter={(value: number, name: string) => [
                       `R$ ${value.toFixed(4)}`,
                       CURRENCY_SHORT[name] || name
