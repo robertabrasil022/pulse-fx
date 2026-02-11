@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import * as prefsRepo from '@/repositories/preferencesRepository';
 
 export interface UserPreferences {
@@ -17,9 +17,11 @@ export interface UserPreferences {
   updated_at: string;
 }
 
+const PRESET_CURRENCIES = ['USD/BRL', 'EUR/BRL', 'CNY/BRL', 'GBP/BRL', 'JPY/BRL', 'ARS/BRL', 'AUD/BRL', 'RUB/BRL', 'INR/BRL'];
+
 const DEFAULT_PREFERENCES: Partial<UserPreferences> = {
   theme: 'system',
-  watchlist: ['USD/BRL', 'EUR/BRL', 'CNY/BRL'],
+  watchlist: [],
   notifications_email: true,
   notifications_push: false,
   quiet_hours_enabled: false,
@@ -30,16 +32,32 @@ const DEFAULT_PREFERENCES: Partial<UserPreferences> = {
 export function usePreferences() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const resetAttemptedRef = useRef(false);
 
   const query = useQuery({
     queryKey: ['preferences', user?.id],
     queryFn: async (): Promise<UserPreferences | null> => {
       if (!user?.id) return null;
 
-      const data = await prefsRepo.fetchPreferences(user.id);
+      let data = await prefsRepo.fetchPreferences(user.id);
 
       if (!data) {
         return prefsRepo.createDefaultPreferences(user.id, DEFAULT_PREFERENCES);
+      }
+
+      // Reset watchlist ONLY ONCE if it contains the old preset values
+      // Use a ref to ensure this happens only on the first load
+      if (!resetAttemptedRef.current) {
+        resetAttemptedRef.current = true;
+        
+        const oldPresetValues = ['USD/BRL', 'EUR/BRL', 'CNY/BRL'];
+        const isOldConfiguration = 
+          data.watchlist.length === 3 && 
+          oldPresetValues.every(curr => data.watchlist.includes(curr));
+        
+        if (isOldConfiguration) {
+          data = await prefsRepo.updatePreferences(user.id, { watchlist: [] });
+        }
       }
 
       return data;
@@ -54,6 +72,9 @@ export function usePreferences() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['preferences', user?.id], data);
+    },
+    onError: (error) => {
+      console.error('Update mutation error:', error);
     },
   });
 
