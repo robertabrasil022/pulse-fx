@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase as supabase } from '@/repositories/externalClient';
 import { CommoditySetting } from '@/types/database';
 
 export async function fetchCommoditySettings(userId: string): Promise<CommoditySetting[]> {

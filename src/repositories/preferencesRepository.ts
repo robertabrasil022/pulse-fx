@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase as supabase } from '@/repositories/externalClient';
 import { UserPreferences } from '@/hooks/usePreferences';
 
 export async function fetchPreferences(userId: string): Promise<UserPreferences | null> {

@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { externalSupabase as supabase } from '@/repositories/externalClient';
 
 export interface Alert {
   id: string;
