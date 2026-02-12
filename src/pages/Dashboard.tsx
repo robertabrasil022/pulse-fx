@@ -30,8 +30,8 @@ export default function Dashboard() {
   });
   const queryClient = useQueryClient();
 
-  // Use user's watchlist from preferences, fallback to default
-  const watchlist = preferences?.watchlist?.length ? preferences.watchlist : DEFAULT_WATCHLIST;
+  // Use user's watchlist from preferences (empty array if no selection)
+  const watchlist = preferences?.watchlist || [];
   const allCurrencies = Array.from(new Set([...PRESET_CURRENCIES, ...watchlist]));
 
   const handleRefresh = () => {
@@ -132,7 +132,7 @@ export default function Dashboard() {
               
               {watchlist.length === 0 ? (
                 <div className="text-center py-8 rounded-lg border border-dashed border-border">
-                  <p className="text-muted-foreground mb-2">Nenhuma moeda na sua watchlist</p>
+                  <p className="text-muted-foreground mb-2">Nenhuma moeda selecionada</p>
                   <Link to="/preferences">
                     <Button variant="outline" size="sm">
                       Configurar watchlist

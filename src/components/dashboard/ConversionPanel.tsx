@@ -15,12 +15,13 @@ interface ConversionPanelProps {
 
 export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
   const { formatNumber, formatPercentage } = useFormatting();
-  const [amount, setAmount] = useState<string>('1000');
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD/BRL');
+  const [amount, setAmount] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
   const [isReversed, setIsReversed] = useState(false); // false = foreign→BRL, true = BRL→foreign
 
   // Get latest rate for selected currency
   const latestRate = useMemo(() => {
+    if (!selectedCurrency) return null;
     const currencyRates = rates.filter(r => r.code === selectedCurrency);
     if (currencyRates.length === 0) return null;
     return currencyRates.sort((a, b) => 
@@ -30,6 +31,9 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
 
   // Calculate KPIs
   const kpis = useMemo(() => {
+    if (!selectedCurrency) {
+      return { change24h: 0, change7d: 0, change30d: 0, volatility7d: 0 };
+    }
     const currencyRates = rates
       .filter(r => r.code === selectedCurrency)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -96,7 +100,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
     return <Minus className="h-4 w-4" />;
   };
 
-  const currencyBase = selectedCurrency.split('/')[0];
+  const currencyBase = selectedCurrency ? selectedCurrency.split('/')[0] : '';
   const fromCurrency = isReversed ? 'BRL' : currencyBase;
   const toCurrency = isReversed ? currencyBase : 'BRL';
 
@@ -131,6 +135,16 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="relative space-y-6">
+        {!selectedCurrency ? (
+          <div className="text-center py-8">
+            <ArrowRightLeft className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <h3 className="text-base font-medium text-foreground mb-1">Conversor de Moedas</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Selecione uma moeda e insira um valor para converter entre Real (BRL) e moedas estrangeiras.
+            </p>
+          </div>
+        ) : null}
+        
         {/* Conversion Form */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,auto,1fr] gap-4 items-end">
           {/* Input Amount */}
@@ -153,7 +167,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
             <label className="text-sm text-muted-foreground">Par</label>
             <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
               <SelectTrigger className="w-[130px]">
-                <SelectValue />
+                <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
                 {currencies.map(currency => (
@@ -197,7 +211,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
         </div>
 
         {/* Rate Info */}
-        {latestRate && (
+        {selectedCurrency && latestRate && (
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
             <div className="px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground">
               Taxa de {rateType}: <span className="font-medium text-foreground">R$ {formatNumber(rate)}</span>
@@ -212,6 +226,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
         )}
 
         {/* KPIs Grid */}
+        {selectedCurrency && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-lg bg-card border border-border">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -256,6 +271,7 @@ export function ConversionPanel({ rates, currencies }: ConversionPanelProps) {
             </span>
           </div>
         </div>
+        )}
       </CardContent>
     </Card>
   );
