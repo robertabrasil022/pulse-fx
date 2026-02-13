@@ -1,11 +1,22 @@
 # INFORMAÇÕES DO PROJETO
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL**: https://pulsefx.lovable.app
 
 ## 🛡️ FX PULSE | CÂMBIO E MOEDAS
 
 Sistema inteligente de monitoramento cambial e análise de risco para importação e exportação 
 Desenvolvido como projeto final do programa **DiverseDev (Ada Tech & Mercado Eletrônico)**
+
+## 📑 Metodologia e Planejamento
+
+Para o desenvolvimento do **PulseFX**, adotamos a **Metodologia Ágil**, garantindo que a execução técnica estivesse sempre alinhada às necessidades de negócio e do usuário final.
+O planejamento foi estruturado através dos seguintes pilares:
+
+* **Backlog e Épicos:** O projeto foi dividido em grandes blocos funcionais (Épicos), permitindo uma visão clara da evolução entre Infraestrutura, Inteligência de Dados e Interface
+* **User Stories:** Cada funcionalidade foi descrita sob a perspectiva da nossa persona, garantindo que o desenvolvimento focasse em resolver dores reais 
+* **Critérios de Aceite:** Estabelecemos requisitos técnicos rigorosos para cada tarefa, assegurando a qualidade desde a modelagem relacional no Supabase até as automações no n8n
+
+Essa abordagem permitiu que o grupo operasse como uma *squad* de alta performance, priorizando a entrega de um MVP funcional, escalável e focado em acessibilidade
 
 ## 🚀 Tecnologias
 - **Frontend:** React + Tailwind CSS (via Lovable)
